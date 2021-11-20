@@ -8,6 +8,7 @@ import serial.tools.list_ports
 from serial.tools import miniterm
 import click
 import sys
+import crc32c
 from datetime import datetime, timedelta
 
 __author__ = "Ben V. Brown"
@@ -20,6 +21,7 @@ class BESMessageTypes(Enum):
     PROGRAMMER_RUNNING = 0x54
     PROGRAMMER_INIT = 0x60
     FLASH_INFO_RESP = 0x65
+    ERASE_BURN_SART = 0x61
 
 
 class BESLink:
@@ -53,7 +55,25 @@ class BESLink:
         Loading in the programmer blob
         """
         exit_time = datetime.now() + timedelta(seconds=30)
-        cmd_prep_load_programmer = [0xBE, 0x53, 0x00, 0x0C, 0xDC, 0x05, 0x01, 0x20, 0xDC, 0x32, 0x01, 0x00, 0xC0, 0xA7, 0xE8, 0x0C, 0x76]
+        cmd_prep_load_programmer = [
+            0xBE,
+            0x53,
+            0x00,
+            0x0C,
+            0xDC,
+            0x05,
+            0x01,
+            0x20,
+            0xDC,
+            0x32,
+            0x01,
+            0x00,
+            0xC0,
+            0xA7,
+            0xE8,
+            0x0C,
+            0x76,
+        ]
         # Send the prep command
         serial_port.write(cmd_prep_load_programmer)
         # wait for response
@@ -105,6 +125,95 @@ class BESLink:
                 break
 
     @classmethod
+    def program_binary_file(cls, serial_port: serial.Serial):
+        """
+        Load the provided program in at the default locations
+
+        """
+
+        with open("programmer.bin", "r+b") as f:
+            file_payload = f.read()
+        file_length_raw = len(file_payload)
+        # have to pad up to a multiple of 0x8000
+        if file_length_raw % 0x8000 != 0:
+            padding_len = 0x8000 - (file_length_raw % 0x8000)
+            padding = [0] * padding_len
+            packed_file = file_payload + padding
+        file_length = len(file_payload)
+        #
+        start_address = 0x3C000000
+        burn_start_msg = [
+            0xBE,
+            0x61,
+            0x07,
+            0x0C,
+            0x00,
+            0x00,
+            0x00,
+            0x3C,
+            0x00,
+            0x00,
+            0x0D,
+            0x00,
+            0x00,
+            0x80,
+            0x00,
+            0x0,
+            0x04,
+        ]
+        burn_start_msg[4] = (start_address >> 0) & 0xFF
+        burn_start_msg[5] = (start_address >> 8) & 0xFF
+        burn_start_msg[6] = (start_address >> 16) & 0xFF
+        burn_start_msg[7] = (start_address >> 24) & 0xFF
+        burn_start_msg[8] = (file_length >> 0) & 0xFF
+        burn_start_msg[9] = (file_length >> 8) & 0xFF
+        burn_start_msg[10] = (file_length >> 16) & 0xFF
+        burn_start_msg[11] = (file_length >> 24) & 0xFF
+        # update checksum
+        burn_start_msg[-1] = cls._calculate_message_checksum(burn_start_msg[0:-1])
+        serial_port.write(burn_start_msg)
+        exit_time = datetime.now() + timedelta(seconds=30)
+
+        while datetime.now() < exit_time:
+            packet = cls._read_packet(serial_port)
+            if packet[1] == BESMessageTypes.ERASE_BURN_SART.value:
+                print(f"Flash burn start returned {packet}")
+                if packet[3] != 0x01:
+                    raise Exception("Possible bad programming start?")
+                break
+        # Start splitting up the payload and sending it
+        while len(packed_file) > 0:
+            chunk = packed_file[0:0x8000]
+            packed_file = packed_file[0x8000:]
+            crc32_of_chunk = crc32c.crc32c(chunk)
+
+    @classmethod
+    def _create_burn_data_message(
+        cls, sequence: int, data_payload: List[bytes]
+    ) -> List[bytes]:
+        """
+        Creates the ready-to-send message to burn this chunk of data
+        """
+        template = [
+            0xBE,
+            0x62,
+            0xC1,
+            0x0B,
+            0x00,
+            0x80,
+            0x00,
+            0x00,
+            0xAB,
+            0x77,
+            0x7F,
+            0xF4,
+            0x00,
+            0x00,
+            0x00,
+            0xFE,
+        ]
+
+    @classmethod
     def _read_packet(cls, port: serial.Serial) -> List[bytes]:
         """
         Try and read a bes packet in the timeout
@@ -149,7 +258,9 @@ class BESLink:
                 return 9
             return 22
 
-        raise Exception(f"Unhandled packet length request for 0x{packet_id1:02x} / 0x{packet_id1:02x}")
+        raise Exception(
+            f"Unhandled packet length request for 0x{packet_id1:02x} / 0x{packet_id1:02x}"
+        )
 
     @classmethod
     def _validate_message_checksum(cls, packet: List[bytes]) -> bool:
@@ -157,13 +268,20 @@ class BESLink:
         Validate the basic packet sum checksum for a message;
         this is actually just validate that all bytes sum to 0xFF (ignoring overflow)
         """
+        chk = cls._calculate_message_checksum(packet[0:-1])
+        return chk == packet[-1]
+
+    @classmethod
+    def _calculate_message_checksum(cls, packet: List[bytes]) -> bytes:
+        """
+        Calculates the checksum for this message and returns it
+        """
+        target = 0xFF
         sum = 0
         for b in packet:
             sum += b
-        sum = sum % 0xFF
-        print(sum)
-        # return sum == 1  # Need to investigate more
-        return True
+            sum = sum & 0xFF
+        return target - (sum)
 
 
 # Spawn monitor on the port
@@ -214,7 +332,9 @@ def program(filepath, port_name):
 @click.argument("port")
 def program_watch(filepath, port):
     """"""
-    print(f"beginning programming of {filepath} to device @ {port} and then will drop into monitor")
+    print(
+        f"beginning programming of {filepath} to device @ {port} and then will drop into monitor"
+    )
     monitor(port)
 
 
