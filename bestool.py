@@ -19,8 +19,9 @@ class BESMessageTypes(Enum):
     START_PROGRAMMER = 0x53
     PROGRAMMER_RUNNING = 0x54
     PROGRAMMER_INIT = 0x60
-    FLASH_INFO_RESP = 0x65
+    FLASH_COMMAND = 0x65
     ERASE_BURN_SART = 0x61
+    FLASH_BURN_DATA = 0x62
 
 
 class BESLink:
@@ -111,7 +112,7 @@ class BESLink:
 
         while datetime.now() < exit_time:
             packet = cls._read_packet(serial_port)
-            if packet[1] == BESMessageTypes.FLASH_INFO_RESP.value:
+            if packet[1] == BESMessageTypes.FLASH_COMMAND.value:
                 print(f"Flash info: ID {packet[5:8]}")
                 break
         cmd_get_flash_unique_id = [0xBE, 0x65, 0x03, 0x01, 0x12, 0xC6]
@@ -119,25 +120,26 @@ class BESLink:
 
         while datetime.now() < exit_time:
             packet = cls._read_packet(serial_port)
-            if packet[1] == BESMessageTypes.FLASH_INFO_RESP.value:
+            if packet[1] == BESMessageTypes.FLASH_COMMAND.value:
                 print(f"Flash info: Unique ID {packet[5:]}")
                 break
 
     @classmethod
-    def program_binary_file(cls, serial_port: serial.Serial):
+    def program_binary_file(cls, serial_port: serial.Serial, filename: str):
         """
         Load the provided program in at the default locations
 
         """
 
-        with open("programmer.bin", "r+b") as f:
+        with open(filename, "r+b") as f:
             file_payload = f.read()
         file_length_raw = len(file_payload)
         # have to pad up to a multiple of 0x8000
         if file_length_raw % 0x8000 != 0:
             padding_len = 0x8000 - (file_length_raw % 0x8000)
             padding = [0] * padding_len
-            packed_file = file_payload + padding
+            packed_file = file_payload + bytes(padding)
+
         file_length = len(file_payload)
         #
         start_address = 0x3C000000
@@ -181,9 +183,80 @@ class BESLink:
                     raise Exception("Possible bad programming start?")
                 break
         # Start splitting up the payload and sending it
+        total_packets_to_send = len(packed_file) / 0x8000
+        packets_waiting_ack = []
+        seq = 0
         while len(packed_file) > 0:
             chunk = packed_file[0:0x8000]
             packed_file = packed_file[0x8000:]
+            data_to_send = cls._create_burn_data_message(seq, chunk)
+            print(f"Sending data chunk {seq}")
+            serial_port.write(data_to_send)
+            seq += 1
+            packets_waiting_ack.append(seq)
+            while len(packets_waiting_ack) > 1:
+                # Only allow two outstanding ones
+                ack_seq = cls._wait_for_programming_ack(serial_port)
+                if ack_seq in packets_waiting_ack:
+                    packets_waiting_ack.remove(ack_seq)
+                else:
+                    raise Exception(f"Double ack for {ack_seq}")
+        while len(packets_waiting_ack) > 0:
+            # Only allow two outstanding ones
+            ack_seq = cls._wait_for_programming_ack(serial_port)
+            if ack_seq in packets_waiting_ack:
+                packets_waiting_ack.remove(ack_seq)
+            else:
+                raise Exception(f"Double ack for {ack_seq}")
+        # Now send the final commit message
+        commit_msg = [
+            0xBE,
+            0x65,
+            0x08,
+            0x09,
+            0x22,
+            0x00,
+            0x00,
+            0x00,
+            0x3C,
+            0x1C,
+            0xEC,
+            0x57,
+            0xBE,
+            0x50,
+        ]
+        commit_msg[5] = (start_address >> 0) & 0xFF
+        commit_msg[6] = (start_address >> 8) & 0xFF
+        commit_msg[7] = (start_address >> 16) & 0xFF
+        commit_msg[8] = (start_address >> 24) & 0xFF
+        commit_msg[-1] = cls._calculate_message_checksum(commit_msg[0:-1])
+        serial_port.write(commit_msg)
+
+        exit_time = datetime.now() + timedelta(seconds=30)
+        while datetime.now() < exit_time:
+            packet = cls._read_packet(serial_port)
+            if packet[1] == BESMessageTypes.FLASH_COMMAND.value:
+                if packet[2] == 0x08 and packet[3] == 0x01:
+                    print("Done")
+                    return
+        raise Exception("Timed out finalising")
+
+    @classmethod
+    def _wait_for_programming_ack(cls, serial_port: serial.Serial) -> int:
+        """
+        Wait for an ack for programming
+        """
+        exit_time = datetime.now() + timedelta(seconds=30)
+        while datetime.now() < exit_time:
+            packet = cls._read_packet(serial_port)
+            if packet[1] == BESMessageTypes.FLASH_BURN_DATA.value:
+                sequence1 = packet[2] - 0xC1
+                sequence2 = packet[5]
+
+                print(f"Flash confirm {sequence1}/{sequence2}")
+                if sequence2 == sequence1:
+                    return sequence1
+        raise Exception("Timeout waiting for programming ack")
 
     @classmethod
     def _create_burn_data_message(
@@ -264,11 +337,14 @@ class BESLink:
             return 6
         if packet_id1 == BESMessageTypes.PROGRAMMER_INIT.value:
             return 11
-        if packet_id1 == BESMessageTypes.FLASH_INFO_RESP.value:
+        if packet_id1 == BESMessageTypes.FLASH_COMMAND.value:
             if packet_id2 == 2:
                 return 9
             return 22
-
+        if packet_id1 == BESMessageTypes.ERASE_BURN_SART.value:
+            return 6
+        if packet_id1 == BESMessageTypes.FLASH_BURN_DATA.value:
+            return 8
         raise Exception(
             f"Unhandled packet length request for 0x{packet_id1:02x} / 0x{packet_id1:02x}"
         )
@@ -330,11 +406,12 @@ def info(port_name):
 @click.argument("port_name")
 def program(filepath, port_name):
     """"""
-    print(f"beginning programming of {filepath} to device @ {port}")
+    print(f"beginning programming of {filepath} to device @ {port_name}")
     port = serial.Serial(port=port_name, baudrate=BES_BAUD, timeout=30)
     BESLink.wait_for_sync(port)
     BESLink.load_programmer_blob(port)
     BESLink.read_flash_info(port)
+    BESLink.program_binary_file(port, filepath)
     port.close()
 
 
