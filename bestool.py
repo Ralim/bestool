@@ -255,7 +255,7 @@ class BESLink:
         commit_msg[6] = (start_address >> 8) & 0xFF
         commit_msg[7] = (start_address >> 16) & 0xFF
         commit_msg[8] = (start_address >> 24) & 0xFF
-        commit_msg[-1] = cls._calculate_message_checksum(commit_msg[0:-1])
+        commit_msg[13] = cls._calculate_message_checksum(commit_msg[0:-1])
         serial_port.write(commit_msg)
 
         exit_time = datetime.now() + timedelta(seconds=30)
@@ -367,6 +367,8 @@ class BESLink:
         if packet_id1 == BESMessageTypes.FLASH_COMMAND.value:
             if packet_id2 == 2:
                 return 9
+            if packet_id2 == 0x08:
+                return 6
             return 22
         if packet_id1 == BESMessageTypes.ERASE_BURN_SART.value:
             return 6
@@ -444,11 +446,18 @@ def program(filepath, port_name):
 
 @cli.command()
 @click.argument("filepath")
-@click.argument("port")
-def program_watch(filepath, port):
+@click.argument("port_name")
+def program_watch(filepath, port_name):
     """"""
-    print(f"beginning programming of {filepath} to device @ {port} and then will drop into monitor")
-    monitor(port)
+    print(f"beginning programming of {filepath} to device @ {port_name} and then will drop into monitor")
+    port = serial.Serial(port=port_name, baudrate=BES_BAUD, timeout=30)
+    BESLink.wait_for_sync(port)
+    BESLink.load_programmer_blob(port)
+    BESLink.read_flash_info(port)
+    BESLink.run_get_cfgdata(port)
+    BESLink.program_binary_file(port, filepath)
+    port.close()
+    monitor(port_name)
 
 
 @cli.command()
