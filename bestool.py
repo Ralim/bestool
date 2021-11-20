@@ -2,12 +2,14 @@
 
 
 from enum import Enum
+import sys
 from typing import List
 import serial
 import serial.tools.list_ports
 from serial.tools import miniterm
 import zlib
 import click
+import time
 from datetime import datetime, timedelta
 
 __author__ = "Ben V. Brown"
@@ -137,7 +139,7 @@ class BESLink:
         # have to pad up to a multiple of 0x8000
         if file_length_raw % 0x8000 != 0:
             padding_len = 0x8000 - (file_length_raw % 0x8000)
-            padding = [0] * padding_len
+            padding = [0xFF] * padding_len
             packed_file = file_payload + bytes(padding)
 
         file_length = len(file_payload)
@@ -192,8 +194,10 @@ class BESLink:
             data_to_send = cls._create_burn_data_message(seq, chunk)
             print(f"Sending data chunk {seq}")
             serial_port.write(data_to_send)
-            seq += 1
             packets_waiting_ack.append(seq)
+            if seq < 2:
+                time.sleep(0.4)
+            seq += 1
             while len(packets_waiting_ack) > 1:
                 # Only allow two outstanding ones
                 ack_seq = cls._wait_for_programming_ack(serial_port)
@@ -203,11 +207,13 @@ class BESLink:
                     raise Exception(f"Double ack for {ack_seq}")
         while len(packets_waiting_ack) > 0:
             # Only allow two outstanding ones
+            print(f"Waiting for {packets_waiting_ack}")
             ack_seq = cls._wait_for_programming_ack(serial_port)
             if ack_seq in packets_waiting_ack:
                 packets_waiting_ack.remove(ack_seq)
             else:
                 raise Exception(f"Double ack for {ack_seq}")
+        print("Sending done; sending commit")
         # Now send the final commit message
         commit_msg = [
             0xBE,
@@ -266,6 +272,8 @@ class BESLink:
         Creates the ready-to-send message to burn this chunk of data
         """
         chunk_size = len(data_payload)
+        if chunk_size != 0x8000:
+            raise Exception("Size not supported")
         template = [
             0xBE,
             0x62,
@@ -294,6 +302,7 @@ class BESLink:
         template[11] = (crc32_of_chunk >> 24) & 0xFF
         template[12] = sequence
         template[15] = cls._calculate_message_checksum(template[0:-1])
+        print("Tx H", bytes(template).hex(","))
         template.extend(data_payload)
         return template
 
@@ -308,7 +317,6 @@ class BESLink:
         while len(packet) < packet_length:
             data = port.read(size=1)
             data = data[0]
-            print(f"0x{data:02X}")
             if len(packet) == 0:
                 if data == 0xBE:
                     packet.append(data)
@@ -317,6 +325,7 @@ class BESLink:
                 packet_length = cls._lookup_packet_length(packet[1], packet[2])
             else:
                 packet.append(data)
+        print("RX", bytes(packet).hex(","), packet)
         # Validate the checksum
         if not cls._validate_message_checksum(packet):
             raise Exception("Invalid message checksum")
