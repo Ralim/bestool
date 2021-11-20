@@ -127,6 +127,25 @@ class BESLink:
                 break
 
     @classmethod
+    def run_get_cfgdata(cls, serial_port: serial.Serial):
+        """
+        No idea what this is for yet
+        """
+        exit_time = datetime.now() + timedelta(seconds=30)
+
+        msg_sys_poll_1 = [0xBE, 0x03, 0x05, 0x08, 0x00, 0xE0, 0x0F, 0x3C, 0x00, 0x10, 0x00, 0x00, 0xF6]
+        serial_port.write(msg_sys_poll_1)
+
+        time.sleep(0.1)
+        serial_port.reset_input_buffer()
+
+        msg_sys_poll_2 = [0xBE, 0x03, 0x06, 0x08, 0x00, 0xF0, 0x0F, 0x3C, 0x00, 0x10, 0x00, 0x00, 0xE5]
+        serial_port.write(msg_sys_poll_2)
+
+        time.sleep(0.1)
+        serial_port.reset_input_buffer()
+
+    @classmethod
     def program_binary_file(cls, serial_port: serial.Serial, filename: str):
         """
         Load the provided program in at the default locations
@@ -135,6 +154,7 @@ class BESLink:
 
         with open(filename, "r+b") as f:
             file_payload = f.read()
+        file_payload = file_payload[0:-4]
         file_length_raw = len(file_payload)
         # have to pad up to a multiple of 0x8000
         if file_length_raw % 0x8000 != 0:
@@ -142,7 +162,7 @@ class BESLink:
             padding = [0xFF] * padding_len
             packed_file = file_payload + bytes(padding)
 
-        file_length = len(file_payload)
+        file_length = len(packed_file)
         #
         start_address = 0x3C000000
         burn_start_msg = [
@@ -195,7 +215,7 @@ class BESLink:
             print(f"Sending data chunk {seq}")
             serial_port.write(data_to_send)
             packets_waiting_ack.append(seq)
-            if seq < 2:
+            if seq < 1:
                 time.sleep(0.4)
             seq += 1
             while len(packets_waiting_ack) > 1:
@@ -265,9 +285,7 @@ class BESLink:
         raise Exception("Timeout waiting for programming ack")
 
     @classmethod
-    def _create_burn_data_message(
-        cls, sequence: int, data_payload: List[bytes]
-    ) -> List[bytes]:
+    def _create_burn_data_message(cls, sequence: int, data_payload: List[bytes]) -> List[bytes]:
         """
         Creates the ready-to-send message to burn this chunk of data
         """
@@ -325,7 +343,7 @@ class BESLink:
                 packet_length = cls._lookup_packet_length(packet[1], packet[2])
             else:
                 packet.append(data)
-        print("RX", bytes(packet).hex(","), packet)
+        print("RX", bytes(packet).hex(","), packet, len(packet))
         # Validate the checksum
         if not cls._validate_message_checksum(packet):
             raise Exception("Invalid message checksum")
@@ -354,9 +372,8 @@ class BESLink:
             return 6
         if packet_id1 == BESMessageTypes.FLASH_BURN_DATA.value:
             return 8
-        raise Exception(
-            f"Unhandled packet length request for 0x{packet_id1:02x} / 0x{packet_id1:02x}"
-        )
+
+        raise Exception(f"Unhandled packet length request for 0x{packet_id1:02x} / 0x{packet_id2:02x}")
 
     @classmethod
     def _validate_message_checksum(cls, packet: List[bytes]) -> bool:
@@ -420,6 +437,7 @@ def program(filepath, port_name):
     BESLink.wait_for_sync(port)
     BESLink.load_programmer_blob(port)
     BESLink.read_flash_info(port)
+    BESLink.run_get_cfgdata(port)
     BESLink.program_binary_file(port, filepath)
     port.close()
 
@@ -429,9 +447,7 @@ def program(filepath, port_name):
 @click.argument("port")
 def program_watch(filepath, port):
     """"""
-    print(
-        f"beginning programming of {filepath} to device @ {port} and then will drop into monitor"
-    )
+    print(f"beginning programming of {filepath} to device @ {port} and then will drop into monitor")
     monitor(port)
 
 
