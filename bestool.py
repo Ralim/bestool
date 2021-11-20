@@ -6,9 +6,8 @@ from typing import List
 import serial
 import serial.tools.list_ports
 from serial.tools import miniterm
+import zlib
 import click
-import sys
-import crc32c
 from datetime import datetime, timedelta
 
 __author__ = "Ben V. Brown"
@@ -185,7 +184,6 @@ class BESLink:
         while len(packed_file) > 0:
             chunk = packed_file[0:0x8000]
             packed_file = packed_file[0x8000:]
-            crc32_of_chunk = crc32c.crc32c(chunk)
 
     @classmethod
     def _create_burn_data_message(
@@ -194,6 +192,7 @@ class BESLink:
         """
         Creates the ready-to-send message to burn this chunk of data
         """
+        chunk_size = len(data_payload)
         template = [
             0xBE,
             0x62,
@@ -212,6 +211,18 @@ class BESLink:
             0x00,
             0xFE,
         ]
+        template[2] = 0xC1 + sequence
+        template[4] = chunk_size & 0xFF
+        template[5] = (chunk_size >> 8) & 0xFF
+        crc32_of_chunk = zlib.crc32(data_payload)
+        template[8] = (crc32_of_chunk >> 0) & 0xFF
+        template[9] = (crc32_of_chunk >> 8) & 0xFF
+        template[10] = (crc32_of_chunk >> 16) & 0xFF
+        template[11] = (crc32_of_chunk >> 24) & 0xFF
+        template[12] = sequence
+        template[15] = cls._calculate_message_checksum(template[0:-1])
+        template.extend(data_payload)
+        return template
 
     @classmethod
     def _read_packet(cls, port: serial.Serial) -> List[bytes]:

@@ -134,3 +134,56 @@ class TestBESLink(unittest.TestCase):
         for sample in samples:
             chk = BESLink._calculate_message_checksum(sample[0:-1])
             self.assertEqual(chk, sample[-1], msg=f"{sample} - {chk:02X}")
+
+    def test_generate_chunk(self):
+        expected_header_data = [
+            0xBE,
+            0x62,
+            0xC1,
+            0x0B,
+            0x00,
+            0x80,
+            0x00,
+            0x00,
+            0xAB,
+            0x77,
+            0x7F,
+            0xF4,
+            0x00,
+            0x00,
+            0x00,
+            0xFE,
+        ]
+        with open("chunk1.bin", "r+b") as f:
+            payload = f.read()
+        messsage_out = BESLink._create_burn_data_message(0, payload)
+        self.assertEqual(
+            messsage_out[0 : len(expected_header_data)], expected_header_data
+        )
+        self.assertEqual(bytes(messsage_out[len(expected_header_data) :]), payload)
+
+        expected_header_data = [
+            0xBE,
+            0x62,
+            0xC2,
+            0x0B,
+            0x00,
+            0x80,
+            0x00,
+            0x00,
+            0x34,
+            0x90,
+            0x61,
+            0xF9,
+            0x01,
+            0x00,
+            0x00,
+            0x73,
+        ]
+        with open("chunk2.bin", "r+b") as f:
+            payload = f.read()
+        messsage_out = BESLink._create_burn_data_message(1, payload)
+        self.assertEqual(
+            messsage_out[0 : len(expected_header_data)], expected_header_data
+        )
+        self.assertEqual(bytes(messsage_out[len(expected_header_data) :]), payload)
