@@ -34,12 +34,14 @@ class BESLink:
     @classmethod
     def wait_for_sync(cls, serial_port: serial.Serial):
         print(f"Waiting for sync on {serial_port.name}")
+        sys.stdout.flush()
         exit_time = datetime.now() + timedelta(seconds=30)
         # Sync packet is {BE,50,00,03,00,00,01,ED}
         while datetime.now() < exit_time:
             packet = cls._read_packet(serial_port)
             if packet[1] == BESMessageTypes.SYNC.value:
                 print("Reached sync 1 sending validation")
+                sys.stdout.flush()
                 break
         # Send out the confirmation message to stay in the bootloader
         resp_data = [0xBE, 0x50, 0x00, 0x01, 0x01, 0xEF]
@@ -48,6 +50,7 @@ class BESLink:
             packet = cls._read_packet(serial_port)
             if packet[1] == BESMessageTypes.SYNC.value:
                 print("Programmer load stage 1")
+                sys.stdout.flush()
                 return
         raise Exception("Timeout")
 
@@ -83,6 +86,7 @@ class BESLink:
             packet = cls._read_packet(serial_port)
             if packet[1] == BESMessageTypes.START_PROGRAMMER.value:
                 print("Resp OK to start programmer load")
+                sys.stdout.flush()
                 break
         with open("programmer.bin", "r+b") as f:
             programmer_payload = f.read()
@@ -92,6 +96,7 @@ class BESLink:
             packet = cls._read_packet(serial_port)
             if packet[1] == BESMessageTypes.PROGRAMMER_RUNNING.value:
                 print("Resp to loading the programmer payload message")
+                sys.stdout.flush()
                 break
         cmd_programmer_start = [0xBE, 0x55, 0x01, 0x00, 0xEB]
         serial_port.write(cmd_programmer_start)
@@ -99,6 +104,7 @@ class BESLink:
             packet = cls._read_packet(serial_port)
             if packet[1] == BESMessageTypes.PROGRAMMER_INIT.value:
                 print("Response ok to programmer start")
+                sys.stdout.flush()
                 break
 
     @classmethod
@@ -109,6 +115,7 @@ class BESLink:
         """
         exit_time = datetime.now() + timedelta(seconds=30)
         print("starting reading flash id")
+        sys.stdout.flush()
         cmd_get_flash_id = [0xBE, 0x65, 0x02, 0x01, 0x11, 0xC8]
         serial_port.write(cmd_get_flash_id)
 
@@ -116,6 +123,7 @@ class BESLink:
             packet = cls._read_packet(serial_port)
             if packet[1] == BESMessageTypes.FLASH_COMMAND.value:
                 print(f"Flash info: ID {packet[5:8]}")
+                sys.stdout.flush()
                 break
         cmd_get_flash_unique_id = [0xBE, 0x65, 0x03, 0x01, 0x12, 0xC6]
         serial_port.write(cmd_get_flash_unique_id)
@@ -124,6 +132,7 @@ class BESLink:
             packet = cls._read_packet(serial_port)
             if packet[1] == BESMessageTypes.FLASH_COMMAND.value:
                 print(f"Flash info: Unique ID {packet[5:]}")
+                sys.stdout.flush()
                 break
 
     @classmethod
@@ -201,6 +210,7 @@ class BESLink:
             packet = cls._read_packet(serial_port)
             if packet[1] == BESMessageTypes.ERASE_BURN_SART.value:
                 print(f"Flash burn start returned {packet}")
+                sys.stdout.flush()
                 if packet[3] != 0x01:
                     raise Exception("Possible bad programming start?")
                 break
@@ -213,6 +223,7 @@ class BESLink:
             packed_file = packed_file[0x8000:]
             data_to_send = cls._create_burn_data_message(seq, chunk)
             print(f"Sending data chunk {seq}")
+            sys.stdout.flush()
             serial_port.write(data_to_send)
             packets_waiting_ack.append(seq)
             if seq < 1:
@@ -228,12 +239,14 @@ class BESLink:
         while len(packets_waiting_ack) > 0:
             # Only allow two outstanding ones
             print(f"Waiting for {packets_waiting_ack}")
+            sys.stdout.flush()
             ack_seq = cls._wait_for_programming_ack(serial_port)
             if ack_seq in packets_waiting_ack:
                 packets_waiting_ack.remove(ack_seq)
             else:
                 raise Exception(f"Double ack for {ack_seq}")
         print("Sending done; sending commit")
+        sys.stdout.flush()
         # Now send the final commit message
         commit_msg = [
             0xBE,
@@ -264,6 +277,7 @@ class BESLink:
             if packet[1] == BESMessageTypes.FLASH_COMMAND.value:
                 if packet[2] == 0x08 and packet[3] == 0x01:
                     print("Done")
+                    sys.stdout.flush()
                     return
         raise Exception("Timed out finalising")
 
@@ -280,6 +294,7 @@ class BESLink:
                 sequence2 = packet[5]
 
                 print(f"Flash confirm {sequence1}/{sequence2}")
+                sys.stdout.flush()
                 if sequence2 == sequence1:
                     return sequence1
         raise Exception("Timeout waiting for programming ack")
@@ -321,6 +336,7 @@ class BESLink:
         template[12] = sequence
         template[15] = cls._calculate_message_checksum(template[0:-1])
         print("Tx H", bytes(template).hex(","))
+        sys.stdout.flush()
         template.extend(data_payload)
         return template
 
@@ -344,6 +360,7 @@ class BESLink:
             else:
                 packet.append(data)
         print("RX", bytes(packet).hex(","), packet, len(packet))
+        sys.stdout.flush()
         # Validate the checksum
         if not cls._validate_message_checksum(packet):
             raise Exception("Invalid message checksum")
@@ -422,6 +439,7 @@ def cli():
 def info(port_name):
     """"""
     print(f"Querying for info @ {port_name}")
+    sys.stdout.flush()
     port = serial.Serial(port=port_name, baudrate=BES_BAUD, timeout=30)
     BESLink.wait_for_sync(port)
     BESLink.load_programmer_blob(port)
@@ -435,6 +453,7 @@ def info(port_name):
 def program(filepath, port_name):
     """"""
     print(f"beginning programming of {filepath} to device @ {port_name}")
+    sys.stdout.flush()
     port = serial.Serial(port=port_name, baudrate=BES_BAUD, timeout=30)
     BESLink.wait_for_sync(port)
     BESLink.load_programmer_blob(port)
@@ -450,6 +469,7 @@ def program(filepath, port_name):
 def program_watch(filepath, port_name):
     """"""
     print(f"beginning programming of {filepath} to device @ {port_name} and then will drop into monitor")
+    sys.stdout.flush()
     port = serial.Serial(port=port_name, baudrate=BES_BAUD, timeout=30)
     BESLink.wait_for_sync(port)
     BESLink.load_programmer_blob(port)
@@ -464,8 +484,10 @@ def program_watch(filepath, port_name):
 def list_ports():
     """Lists available com ports"""
     print("Detected Ports")
+    sys.stdout.flush()
     for port in serial.tools.list_ports.comports():
         print(port)
+    sys.stdout.flush()
 
 
 if __name__ == "__main__":
