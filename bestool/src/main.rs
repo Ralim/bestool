@@ -1,4 +1,5 @@
 mod cmds;
+mod serial_monitor;
 
 use clap::Parser;
 use crate::cmds::{cmd_list_serial_ports, cmd_serial_port_monitor};
