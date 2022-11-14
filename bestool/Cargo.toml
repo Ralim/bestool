@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 serialport = "4.2.0"
 clap = { version = "4.0", features = ["derive"] }
+thiserror = "1.0.37"
