@@ -2,7 +2,7 @@ use crate::beslink;
 use crate::beslink::{BESLinkError, BES_PROGRAMMING_BAUDRATE};
 use serialport::SerialPort;
 
-pub fn cmd_write_image(input_file: String, serial_port: String) {
+pub fn cmd_write_image(_input_file: String, serial_port: String) {
     //First gain sync to the device
     println!(
         "Opening serial monitor to {} @ {}",
@@ -21,6 +21,14 @@ fn sync_into_bootloader(serial_port: Box<dyn SerialPort>) -> Result<(), BESLinkE
     // Gain sync
     let _ = beslink::sync(serial_port)?;
     // Send message to stay in bootloader
-    //resp_data = [0xBE, 0x50, 0x00, 0x01, 0x01, 0xEF]
-    return Ok(());
+    let msg = beslink::BesMessage {
+        sync: beslink::BES_SYNC,
+        type1: beslink::MessageTypes::Sync,
+        payload: vec![0x00, 0x01, 0x01],
+        checksum: 0xEF,
+    };
+    return match beslink::send_packet(serial_port, msg) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(BESLinkError::from(e)),
+    };
 }

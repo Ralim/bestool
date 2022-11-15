@@ -2,7 +2,7 @@ mod beslink;
 mod cmds;
 mod serial_monitor;
 
-use crate::cmds::{cmd_list_serial_ports, cmd_serial_port_monitor};
+use crate::cmds::{cmd_list_serial_ports, cmd_serial_port_monitor, cmd_write_image};
 use clap::Parser;
 
 // BES2300 programming utility for better cross platform support
@@ -52,6 +52,9 @@ fn main() {
         BesTool::SerialMonitor(args) => {
             cmd_serial_port_monitor(args.serial_port_path, args.baud_rate);
         }
-        BesTool::WriteImage(args) => {}
+        BesTool::WriteImage(args) => cmd_write_image(
+            args.firmware_path.unwrap().to_str().unwrap().to_owned(),
+            args.serial_port_path,
+        ),
     }
 }
