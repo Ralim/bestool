@@ -1,3 +1,4 @@
+mod bootloader;
 mod errors;
 mod message;
 mod packet;
