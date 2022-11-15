@@ -33,6 +33,17 @@ pub struct BesMessage {
     pub checksum: u8,
 }
 
+impl BesMessage {
+    pub fn to_vec(self) -> Vec<u8> {
+        let mut result: Vec<u8> = vec![];
+        result.push(self.sync);
+        result.push(self.type1 as u8);
+        result.append(&mut self.payload.clone());
+        result.push(self.checksum);
+        return result;
+    }
+}
+
 impl From<Vec<u8>> for BesMessage {
     fn from(d: Vec<u8>) -> Self {
         let mut msg = BesMessage {
