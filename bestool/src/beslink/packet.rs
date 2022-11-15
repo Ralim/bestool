@@ -1,11 +1,16 @@
 use crate::beslink::errors::BESLinkError;
 use crate::beslink::message::{BesMessage, MessageTypes};
+use crate::beslink::BES_SYNC;
 use serialport::SerialPort;
-use std::error::Error;
-use std::io;
-use std::io::Read;
+use std::io::{Read, Write};
 
-const BESLINK_START_SYMBOL: u8 = 0xBE;
+pub fn send_packet(
+    mut serial_port: Box<dyn SerialPort>,
+    msg: BesMessage,
+) -> std::io::Result<usize> {
+    let packet = msg.to_vec();
+    return serial_port.write(packet.as_slice());
+}
 
 pub fn read_packet(mut serial_port: Box<dyn SerialPort>) -> Result<BesMessage, BESLinkError> {
     //
@@ -18,7 +23,7 @@ pub fn read_packet(mut serial_port: Box<dyn SerialPort>) -> Result<BesMessage, B
             Ok(n) => {
                 if n == 1 {
                     // Only grab if actual data
-                    if !(packet.len() == 0 && buffer[0] != BESLINK_START_SYMBOL) {
+                    if !(packet.len() == 0 && buffer[0] != BES_SYNC) {
                         packet.push(buffer[0]);
                     }
                 }
