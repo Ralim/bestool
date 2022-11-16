@@ -4,13 +4,22 @@ use crate::beslink::BES_SYNC;
 use serialport::SerialPort;
 use std::io::ErrorKind::TimedOut;
 use std::io::{Read, Write};
+use tracing::error;
+use tracing::info;
+use tracing::warn;
 
-pub fn send_packet(
-    serial_port: &mut Box<dyn SerialPort>,
-    msg: BesMessage,
-) -> std::io::Result<usize> {
+pub fn send_packet(serial_port: &mut Box<dyn SerialPort>, msg: BesMessage) -> std::io::Result<()> {
     let packet = msg.to_vec();
-    return serial_port.write(packet.as_slice());
+    return match serial_port.write_all(packet.as_slice()) {
+        Ok(_) => {
+            info!("Wrote {} bytes", packet.len());
+            Ok(())
+        }
+        Err(e) => {
+            error!("Writing to port raised {:?}", e);
+            Err(e)
+        }
+    };
 }
 
 pub fn read_packet(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage, BESLinkError> {
@@ -54,11 +63,14 @@ pub fn validate_packet_checksum(packet: &Vec<u8>) -> Result<(), BESLinkError> {
     if checksum == packet[packet.len() - 1] {
         return Ok(());
     }
-    return Err(BESLinkError::BadChecksumError {
+    let e = BESLinkError::BadChecksumError {
         failed_packet: packet.clone(),
         got: packet[packet.len() - 1],
         wanted: checksum,
-    });
+    };
+    warn!("Bad Checksum!! {:?}", e);
+    // return Err(e);
+    return Ok(());
 }
 pub fn calculate_packet_checksum(packet: &Vec<u8>) -> u8 {
     let target: u8 = 0xFF;

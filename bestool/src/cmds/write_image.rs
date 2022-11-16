@@ -4,6 +4,7 @@ use crate::beslink::{
     BESLinkError, BES_PROGRAMMING_BAUDRATE,
 };
 use serialport::SerialPort;
+use std::time::Duration;
 use tracing::error;
 use tracing::info;
 
@@ -13,7 +14,9 @@ pub fn cmd_write_image(_input_file: String, serial_port: String) {
         "Opening serial monitor to {} @ {}",
         serial_port, BES_PROGRAMMING_BAUDRATE
     );
-    let serial_port = serialport::new(serial_port, BES_PROGRAMMING_BAUDRATE);
+    let mut serial_port = serialport::new(serial_port, BES_PROGRAMMING_BAUDRATE);
+    serial_port = serial_port.timeout(Duration::from_millis(5000));
+
     match serial_port.open() {
         Ok(mut port) => match run_through_to_flash_info(&mut port) {
             Ok(_) => {

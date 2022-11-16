@@ -15,9 +15,9 @@ pub fn query_memory_info(serial_port: &mut Box<dyn SerialPort>) -> Result<(), BE
         checksum: 0xC6,
     };
     let _ = send_packet(serial_port, get_flash_id_cmd)?;
-    let flash_id = sync(serial_port, MessageTypes::StartProgrammer)?;
+    let flash_id = sync(serial_port, MessageTypes::FlashCommand)?;
     let _ = send_packet(serial_port, get_flash_unique_id_cmd)?;
-    let flash_unique_id = sync(serial_port, MessageTypes::StartProgrammer)?;
+    let flash_unique_id = sync(serial_port, MessageTypes::FlashCommand)?;
     println!("Flash General ID {:?}", flash_id.payload);
     println!("Flash Unique ID {:?}", flash_unique_id.payload);
     return Ok(());

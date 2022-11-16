@@ -2,6 +2,7 @@ use crate::beslink::{send_packet, sync, BESLinkError, BesMessage, MessageTypes, 
 use serialport::SerialPort;
 use std::io::Write;
 use tracing::error;
+use tracing::info;
 //Embed the bin file for future
 const PROGRAMMER_BINARY: &'static [u8; 78564] = include_bytes!("../../../programmer.bin");
 
@@ -18,7 +19,7 @@ pub fn load_programmer_runtime_binary_blob(
     };
     let _ = send_packet(&mut serial_port, preload_setup_message)?;
     let _ = sync(serial_port, MessageTypes::StartProgrammer)?;
-    match serial_port.write(PROGRAMMER_BINARY) {
+    match serial_port.write_all(PROGRAMMER_BINARY) {
         Ok(_) => {}
         Err(e) => {
             error!("Failed to write the programmer binary {:?}", e);
@@ -38,5 +39,6 @@ pub fn start_programmer_runtime_binary_blob(
         checksum: 0xEB,
     };
     send_packet(&mut serial_port, preload_setup_message)?;
-    return sync(serial_port, MessageTypes::StartProgrammer);
+    info!("Sent start programmer message");
+    return sync(serial_port, MessageTypes::ProgrammerInit);
 }
