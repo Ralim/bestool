@@ -4,6 +4,7 @@ pub enum MessageTypes {
     Sync = 0x50,
     StartProgrammer = 0x53,
     ProgrammerRunning = 0x54,
+    ProgrammerStart = 0x55,
     ProgrammerInit = 0x60,
     FlashCommand = 0x65,
     EraseBurnStart = 0x61,

@@ -2,6 +2,7 @@ use crate::beslink::errors::BESLinkError;
 use crate::beslink::message::{BesMessage, MessageTypes};
 use crate::beslink::BES_SYNC;
 use serialport::SerialPort;
+use std::io::ErrorKind::TimedOut;
 use std::io::{Read, Write};
 
 pub fn send_packet(
@@ -29,8 +30,10 @@ pub fn read_packet(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage, 
                 }
             }
             Err(e) => {
-                println!("Error reading packet header {:?}", e);
-                return Err(BESLinkError::from(e));
+                if e.kind() != TimedOut {
+                    println!("Error reading packet header {:?}", e);
+                    return Err(BESLinkError::from(e));
+                }
             }
         }
         if packet.len() == 3 && packet_len == 3 {
@@ -59,11 +62,12 @@ pub fn validate_packet_checksum(packet: &Vec<u8>) -> Result<(), BESLinkError> {
 }
 pub fn calculate_packet_checksum(packet: &Vec<u8>) -> u8 {
     let target: u8 = 0xFF;
-    let mut sum: u8 = 0;
+    let mut sum: u32 = 0;
     for b in packet {
-        sum += b;
+        sum += *b as u32;
+        sum = sum % 0xFF;
     }
-    return target - sum;
+    return target - (sum as u8) + 1;
 }
 fn decode_packet_length(packet: &Vec<u8>) -> u16 {
     if packet.len() < 3 {
@@ -88,6 +92,7 @@ fn decode_packet_length(packet: &Vec<u8>) -> u16 {
             }
             MessageTypes::EraseBurnStart => 6,
             MessageTypes::FlashBurnData => 8,
+            MessageTypes::ProgrammerStart => 6,
         },
         Err(_) => {
             println!(

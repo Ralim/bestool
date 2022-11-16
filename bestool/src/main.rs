@@ -1,9 +1,9 @@
 mod beslink;
 mod cmds;
 mod serial_monitor;
-
 use crate::cmds::{cmd_list_serial_ports, cmd_serial_port_monitor, cmd_write_image};
 use clap::Parser;
+use tracing::Level;
 
 // BES2300 programming utility for better cross platform support
 // This is completely reverse engineered at this point; there ~may~ will be bugs
@@ -47,6 +47,13 @@ struct WriteImage {
 }
 
 fn main() {
+    // install global subscriber configured based on RUST_LOG envvar.
+    let subscriber = tracing_subscriber::fmt()
+        // filter spans/events with level TRACE or higher.
+        .with_max_level(Level::INFO)
+        .finish();
+    let _ = tracing::subscriber::set_global_default(subscriber);
+
     match BesTool::parse() {
         BesTool::ListSerialPorts(_) => cmd_list_serial_ports(),
         BesTool::SerialMonitor(args) => {
