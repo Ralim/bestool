@@ -1,5 +1,5 @@
 use std::convert::TryFrom;
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum MessageTypes {
     Sync = 0x50,
     StartProgrammer = 0x53,

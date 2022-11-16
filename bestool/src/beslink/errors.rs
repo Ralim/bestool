@@ -13,6 +13,4 @@ pub enum BESLinkError {
 
     #[error("Communications timed out")]
     Timeout,
-    #[error("unknown data store error")]
-    Unknown,
 }

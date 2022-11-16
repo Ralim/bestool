@@ -5,14 +5,14 @@ use serialport::SerialPort;
 use std::io::{Read, Write};
 
 pub fn send_packet(
-    mut serial_port: Box<dyn SerialPort>,
+    serial_port: &mut Box<dyn SerialPort>,
     msg: BesMessage,
 ) -> std::io::Result<usize> {
     let packet = msg.to_vec();
     return serial_port.write(packet.as_slice());
 }
 
-pub fn read_packet(mut serial_port: Box<dyn SerialPort>) -> Result<BesMessage, BESLinkError> {
+pub fn read_packet(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage, BESLinkError> {
     //
     let mut packet: Vec<u8> = vec![];
     let mut packet_len: usize = 3; //Start expectations at the minimum

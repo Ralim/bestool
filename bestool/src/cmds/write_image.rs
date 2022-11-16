@@ -1,5 +1,5 @@
 use crate::beslink;
-use crate::beslink::{BESLinkError, BES_PROGRAMMING_BAUDRATE};
+use crate::beslink::{load_programmer_runtime_binary_blob, BESLinkError, BES_PROGRAMMING_BAUDRATE};
 use serialport::SerialPort;
 
 pub fn cmd_write_image(_input_file: String, serial_port: String) {
@@ -10,16 +10,18 @@ pub fn cmd_write_image(_input_file: String, serial_port: String) {
     );
     let serial_port = serialport::new(serial_port, BES_PROGRAMMING_BAUDRATE);
     match serial_port.open() {
-        Ok(port) => {
-            let _ = sync_into_bootloader(port);
+        Ok(mut port) => {
+            let _ = sync_into_bootloader(&mut port);
+            let _ = load_programmer_runtime_binary_blob(&mut port);
         }
         Err(e) => println!("Failed to open serial port - {:?}", e),
     }
 }
 
-fn sync_into_bootloader(serial_port: Box<dyn SerialPort>) -> Result<(), BESLinkError> {
+fn sync_into_bootloader(serial_port: &mut Box<dyn SerialPort>) -> Result<(), BESLinkError> {
     // Gain sync
-    let _ = beslink::sync(serial_port)?;
+
+    let _ = beslink::sync(serial_port, beslink::MessageTypes::Sync)?;
     // Send message to stay in bootloader
     let msg = beslink::BesMessage {
         sync: beslink::BES_SYNC,
