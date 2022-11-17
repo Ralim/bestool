@@ -20,6 +20,19 @@ pub fn burn_image_to_flash(
     send_flash_erase(serial_port, file_length, address)?;
 
     //Now loop, send a flash chunk and handle an ack
+    let mut chunk_num = 0;
+    let mut outstanding_chunks = 0;
+    let file_chunks = payload.chunks(FLASH_WRITE_SIZE);
+    for chunk in file_chunks {
+        loop {
+            if outstanding_chunks < MAX_UNACKED_PACKETS {
+                send_flash_chunk_msg(serial_port, chunk.to_vec(), chunk_num)?;
+                chunk_num += 1;
+                outstanding_chunks += 1;
+            }
+        }
+    }
+
     return Ok(());
 }
 
@@ -51,7 +64,6 @@ fn send_flash_chunk_msg(
     serial_port: &mut Box<dyn SerialPort>,
     payload: Vec<u8>,
     chunk: usize,
-    _address: usize,
 ) -> Result<(), BESLinkError> {
     let data_message = get_flash_chunk_msg(payload.clone(), chunk);
     send_packet(serial_port, data_message)?;
