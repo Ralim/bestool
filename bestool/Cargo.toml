@@ -11,3 +11,4 @@ clap = { version = "4.0", features = ["derive"] }
 thiserror = "1.0.37"
 tracing = "0.1"
 tracing-subscriber = "0.3"
+crc = "3.0.0"
