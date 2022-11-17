@@ -4,6 +4,8 @@ mod memory_info;
 mod message;
 mod packet;
 mod sync;
+mod test_port;
+mod write_flash;
 
 pub const BES_PROGRAMMING_BAUDRATE: u32 = 921600;
 pub const BES_SYNC: u8 = 0xBE;
@@ -16,3 +18,4 @@ pub use message::MessageTypes;
 pub use packet::read_packet;
 pub use packet::send_packet;
 pub use sync::sync;
+pub use write_flash::burn_image_to_flash;

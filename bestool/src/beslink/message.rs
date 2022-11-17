@@ -1,5 +1,7 @@
+use crate::beslink::packet::calculate_packet_checksum;
 use std::convert::TryFrom;
-#[derive(Debug, PartialEq)]
+
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum MessageTypes {
     Sync = 0x50,
     StartProgrammer = 0x53,
@@ -26,7 +28,7 @@ impl TryFrom<u8> for MessageTypes {
         }
     }
 }
-
+#[derive(Debug, PartialEq, Clone)]
 pub struct BesMessage {
     pub sync: u8,
     pub type1: MessageTypes,
@@ -35,13 +37,18 @@ pub struct BesMessage {
 }
 
 impl BesMessage {
-    pub fn to_vec(self) -> Vec<u8> {
+    pub fn to_vec(&self) -> Vec<u8> {
         let mut result: Vec<u8> = vec![];
         result.push(self.sync);
         result.push(self.type1 as u8);
         result.append(&mut self.payload.clone());
         result.push(self.checksum);
         return result;
+    }
+    pub fn set_checksum(&mut self) {
+        let mut v = self.to_vec();
+        v.pop();
+        self.checksum = calculate_packet_checksum(&v);
     }
 }
 

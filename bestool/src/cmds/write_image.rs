@@ -1,14 +1,15 @@
 use crate::beslink;
 use crate::beslink::{
-    load_programmer_runtime_binary_blob, query_memory_info, start_programmer_runtime_binary_blob,
-    BESLinkError, BES_PROGRAMMING_BAUDRATE,
+    burn_image_to_flash, load_programmer_runtime_binary_blob, query_memory_info,
+    start_programmer_runtime_binary_blob, BESLinkError, BES_PROGRAMMING_BAUDRATE,
 };
 use serialport::SerialPort;
+use std::fs;
 use std::time::Duration;
 use tracing::error;
 use tracing::info;
 
-pub fn cmd_write_image(_input_file: String, serial_port: String) {
+pub fn cmd_write_image(input_file: String, serial_port: String) {
     //First gain sync to the device
     println!(
         "Opening serial monitor to {} @ {}",
@@ -18,16 +19,37 @@ pub fn cmd_write_image(_input_file: String, serial_port: String) {
     serial_port = serial_port.timeout(Duration::from_millis(5000));
 
     match serial_port.open() {
-        Ok(mut port) => match run_through_to_flash_info(&mut port) {
-            Ok(_) => {
-                info!("Done...");
+        Ok(mut port) => {
+            info!("Starting loader and checking communications");
+            match run_through_to_flash_info(&mut port) {
+                Ok(_) => {
+                    info!("Done...");
+                }
+                Err(e) => {
+                    error!("Failed {:?}", e);
+                }
             }
-            Err(e) => {
-                error!("Failed {:?}", e);
+            info!("Now doing firmware load");
+            match do_burn_image_to_flash(input_file, &mut port) {
+                Ok(_) => {
+                    info!("Done...");
+                }
+                Err(e) => {
+                    error!("Failed {:?}", e);
+                }
             }
-        },
+        }
         Err(e) => println!("Failed to open serial port - {:?}", e),
     }
+}
+fn do_burn_image_to_flash(
+    input_file: String,
+    serial_port: &mut Box<dyn SerialPort>,
+) -> Result<(), BESLinkError> {
+    // Open file, read file, call burn_image_to_flash
+    let file_contents = fs::read(input_file)?;
+
+    return burn_image_to_flash(serial_port, file_contents, 0x3C000000);
 }
 fn run_through_to_flash_info(serial_port: &mut Box<dyn SerialPort>) -> Result<(), BESLinkError> {
     sync_into_bootloader(serial_port)?;
