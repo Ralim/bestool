@@ -10,7 +10,6 @@ pub enum BESLinkError {
         got: u8,
         wanted: u8,
     },
-
-    #[error("Communications timed out")]
-    Timeout,
+    // #[error("Communications timed out")]
+    // Timeout,
 }
