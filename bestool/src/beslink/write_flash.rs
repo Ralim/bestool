@@ -4,7 +4,7 @@ use serialport::SerialPort;
 use tracing::error;
 use tracing::info;
 const FLASH_WRITE_SIZE: usize = 0x8000;
-const MAX_UNACKED_PACKETS: usize = 2;
+const MAX_UNACKED_PACKETS: usize = 1;
 
 pub fn burn_image_to_flash(
     serial_port: &mut Box<dyn SerialPort>,
@@ -119,6 +119,9 @@ fn send_flash_chunk_msg(
     payload: Vec<u8>,
     chunk: usize,
 ) -> Result<(), BESLinkError> {
+    if payload.len() != FLASH_WRITE_SIZE {
+        return Err(BESLinkError::InvalidArgs {});
+    }
     let data_message = get_flash_chunk_msg(payload.clone(), chunk);
     let mut message_vec = data_message.to_vec();
     message_vec.extend(payload);

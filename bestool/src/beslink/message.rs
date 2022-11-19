@@ -68,6 +68,8 @@ impl From<Vec<u8>> for BesMessage {
             }
         };
 
+        msg.payload = d[1..d.len() - 1].to_vec();
+
         return msg;
     }
 }

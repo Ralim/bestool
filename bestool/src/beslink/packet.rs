@@ -48,6 +48,7 @@ pub fn read_packet(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage, 
         if packet.len() == 3 && packet_len == 3 {
             //Check actual packet length
             packet_len = decode_packet_length(&packet) as usize;
+            info!("Got packet len lookup {} for {}", packet_len, packet[1])
         }
         //TODO timeout
     }
@@ -69,8 +70,8 @@ pub fn validate_packet_checksum(packet: &Vec<u8>) -> Result<(), BESLinkError> {
         wanted: checksum,
     };
     warn!("Bad Checksum!! {:?}", e);
-    // return Err(e);
-    return Ok(());
+    return Err(e);
+    // return Ok(());
 }
 pub fn calculate_packet_checksum(packet: &Vec<u8>) -> u8 {
     let mut sum: u32 = 0;
