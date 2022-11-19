@@ -4,7 +4,7 @@ use serialport::SerialPort;
 use tracing::error;
 use tracing::info;
 const FLASH_WRITE_SIZE: usize = 0x8000;
-const MAX_UNACKED_PACKETS: usize = 1;
+const MAX_UNACKED_PACKETS: usize = 2;
 
 pub fn burn_image_to_flash(
     serial_port: &mut Box<dyn SerialPort>,
@@ -18,8 +18,8 @@ pub fn burn_image_to_flash(
     }
     let file_length = payload.len();
     match send_flash_erase(serial_port, file_length, address) {
-        Ok(_) => {
-            info!("Flash Erase confirmed")
+        Ok(m) => {
+            info!("Flash Erase confirmed, {:?}", m)
         }
         Err(e) => {
             error!("Flash erase message failed {:?}", e);
@@ -123,6 +123,7 @@ fn send_flash_chunk_msg(
         return Err(BESLinkError::InvalidArgs {});
     }
     let data_message = get_flash_chunk_msg(payload.clone(), chunk);
+    info!("Flash message {:x?}", data_message.to_vec());
     let mut message_vec = data_message.to_vec();
     message_vec.extend(payload);
 
@@ -157,10 +158,13 @@ fn send_flash_erase(
         .extend((payload_len as u32).to_le_bytes());
     burn_prepare_message
         .payload
-        .extend(vec![0x00, 0x00, 0x80, 0x00, 0x00]);
+        .extend(vec![0x00, 0x80, 0x00, 0x00]);
     burn_prepare_message.set_checksum();
+    info!(
+        "Sent erase start message, {:?}",
+        burn_prepare_message.to_vec()
+    );
     send_packet(serial_port, burn_prepare_message)?;
-    info!("Sent erase start message");
     return sync(serial_port, MessageTypes::EraseBurnStart);
 }
 

@@ -4,6 +4,7 @@ use std::convert::TryFrom;
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum MessageTypes {
     Sync = 0x50,
+    SysConfig = 0x03,
     StartProgrammer = 0x53,
     ProgrammerRunning = 0x54,
     ProgrammerStart = 0x55,
@@ -24,6 +25,7 @@ impl TryFrom<u8> for MessageTypes {
             x if x == MessageTypes::FlashCommand as u8 => Ok(MessageTypes::FlashCommand),
             x if x == MessageTypes::EraseBurnStart as u8 => Ok(MessageTypes::EraseBurnStart),
             x if x == MessageTypes::FlashBurnData as u8 => Ok(MessageTypes::FlashBurnData),
+            x if x == MessageTypes::SysConfig as u8 => Ok(MessageTypes::SysConfig),
             _ => Err(()),
         }
     }

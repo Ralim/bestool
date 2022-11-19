@@ -1,4 +1,5 @@
 mod bootloader;
+mod cfg_data;
 mod errors;
 mod memory_info;
 mod message;
@@ -11,6 +12,7 @@ pub const BES_PROGRAMMING_BAUDRATE: u32 = 921600;
 pub const BES_SYNC: u8 = 0xBE;
 pub use bootloader::load_programmer_runtime_binary_blob;
 pub use bootloader::start_programmer_runtime_binary_blob;
+pub use cfg_data::send_cfg_data;
 pub use errors::BESLinkError;
 pub use memory_info::query_memory_info;
 pub use message::BesMessage;

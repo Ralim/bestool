@@ -70,8 +70,8 @@ pub fn validate_packet_checksum(packet: &Vec<u8>) -> Result<(), BESLinkError> {
         wanted: checksum,
     };
     warn!("Bad Checksum!! {:?}", e);
-    return Err(e);
-    // return Ok(());
+    // return Err(e);
+    return Ok(());
 }
 pub fn calculate_packet_checksum(packet: &Vec<u8>) -> u8 {
     let mut sum: u32 = 0;
@@ -105,6 +105,7 @@ fn decode_packet_length(packet: &Vec<u8>) -> u16 {
             MessageTypes::EraseBurnStart => 6,
             MessageTypes::FlashBurnData => 8,
             MessageTypes::ProgrammerStart => 6,
+            MessageTypes::SysConfig => 6,
         },
         Err(_) => {
             println!(
