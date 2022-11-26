@@ -1,3 +1,5 @@
+use std::io::Write;
+use std::time::Duration;
 use crate::beslink::{send_packet, sync, BESLinkError, BesMessage, MessageTypes, BES_SYNC};
 use crc::{Crc, CRC_32_ISO_HDLC};
 use serialport::SerialPort;
@@ -87,7 +89,7 @@ fn send_flash_commit_message(
     burn_prepare_message.set_checksum();
     send_packet(serial_port, burn_prepare_message)?;
     info!("Sent flash finalise message");
-    sync(serial_port, MessageTypes::EraseBurnStart)?;
+    sync(serial_port, MessageTypes::FlashCommand)?;
     return Ok(());
 }
 fn get_flash_chunk_msg(payload: Vec<u8>, chunk: usize) -> BesMessage {
@@ -130,6 +132,8 @@ fn send_flash_chunk_msg(
     return match serial_port.write_all(message_vec.as_slice()) {
         Ok(_) => {
             info!("Wrote flash buffer of len {} ", message_vec.len());
+            let _ =serial_port.flush();
+            std::thread::sleep(Duration::from_millis(10));
             Ok(())
         }
         Err(e) => {

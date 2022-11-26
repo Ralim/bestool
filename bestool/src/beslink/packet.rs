@@ -4,6 +4,7 @@ use crate::beslink::BES_SYNC;
 use serialport::SerialPort;
 use std::io::ErrorKind::TimedOut;
 use std::io::{Read, Write};
+use std::time::Duration;
 use tracing::error;
 use tracing::info;
 use tracing::warn;
@@ -13,6 +14,7 @@ pub fn send_packet(serial_port: &mut Box<dyn SerialPort>, msg: BesMessage) -> st
     return match serial_port.write_all(packet.as_slice()) {
         Ok(_) => {
             info!("Wrote {} bytes", packet.len());
+            let _ = serial_port.flush();
             Ok(())
         }
         Err(e) => {
@@ -52,6 +54,8 @@ pub fn read_packet(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage, 
         }
         //TODO timeout
     }
+    std::thread::sleep(Duration::from_millis(5));
+
     return match validate_packet_checksum(&packet) {
         Ok(_) => Ok(BesMessage::from(packet)),
         Err(e) => Err(e),
@@ -105,7 +109,10 @@ fn decode_packet_length(packet: &Vec<u8>) -> u16 {
             MessageTypes::EraseBurnStart => 6,
             MessageTypes::FlashBurnData => 8,
             MessageTypes::ProgrammerStart => 6,
-            MessageTypes::SysConfig => 6,
+            MessageTypes::SysConfig => {
+
+                return 6;
+            },
         },
         Err(_) => {
             println!(
