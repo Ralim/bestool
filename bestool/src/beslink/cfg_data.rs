@@ -12,7 +12,7 @@ pub fn send_cfg_data(serial_port: &mut Box<dyn SerialPort>) -> Result<(), BESLin
     };
 
     send_packet(serial_port, cfg_data_1)?;
-    std::thread::sleep(Duration::from_millis(100));
+    std::thread::sleep(Duration::from_millis(70));
     let cfg_data_2 = BesMessage {
         sync: BES_SYNC,
         type1: MessageTypes::SysConfig,
@@ -22,7 +22,7 @@ pub fn send_cfg_data(serial_port: &mut Box<dyn SerialPort>) -> Result<(), BESLin
 
     send_packet(serial_port, cfg_data_2)?;
     sync(serial_port, MessageTypes::SysConfig)?;
-    std::thread::sleep(Duration::from_millis(200));
+    std::thread::sleep(Duration::from_millis(70));
     serial_port.clear(ClearBuffer::Input)?;
     return Ok(());
 }
