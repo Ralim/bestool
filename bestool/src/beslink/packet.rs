@@ -31,7 +31,7 @@ pub fn read_packet_with_trailing_data(
     //TODO for now assuming the 0x03 code for response
 
     let response = read_packet(serial_port)?;
-    if response.type1 != MessageTypes::SysConfig {
+    if response.type1 != MessageTypes::FlashRead {
         return Err(BESLinkError::InvalidArgs);
     }
     let mut packet: Vec<u8> = vec![];
@@ -139,7 +139,7 @@ fn decode_packet_length(packet: &Vec<u8>) -> u16 {
             MessageTypes::EraseBurnStart => 6,
             MessageTypes::FlashBurnData => 8,
             MessageTypes::ProgrammerStart => 6,
-            MessageTypes::SysConfig => {
+            MessageTypes::FlashRead => {
                 return 6;
             }
         },

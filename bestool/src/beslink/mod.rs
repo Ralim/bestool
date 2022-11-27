@@ -11,6 +11,8 @@ mod write_flash;
 
 pub const BES_PROGRAMMING_BAUDRATE: u32 = 921600;
 pub const BES_SYNC: u8 = 0xBE;
+pub const FLASH_BUFFER_SIZE: usize = 0x8000;
+
 pub use bootloader::load_programmer_runtime_binary_blob;
 pub use bootloader::start_programmer_runtime_binary_blob;
 pub use cfg_data::send_cfg_data;
