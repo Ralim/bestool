@@ -23,7 +23,37 @@ pub fn send_packet(serial_port: &mut Box<dyn SerialPort>, msg: BesMessage) -> st
         }
     };
 }
+pub fn read_packet_with_trailing_data(
+    serial_port: &mut Box<dyn SerialPort>,
+    expected_data_len: usize,
+) -> Result<(BesMessage, Vec<u8>), BESLinkError> {
+    //First read the packet; then read the expected_raw_bytes from the uart
+    //TODO for now assuming the 0x03 code for response
 
+    let response = read_packet(serial_port)?;
+    if response.type1 != MessageTypes::SysConfig {
+        return Err(BESLinkError::InvalidArgs);
+    }
+    let mut packet: Vec<u8> = vec![];
+    let mut buffer: [u8; 128] = [0; 128];
+
+    while packet.len() < expected_data_len {
+        match serial_port.read(&mut buffer) {
+            Ok(n) => {
+                if n > 0 {
+                    packet.extend(&buffer[0..n]);
+                }
+            }
+            Err(e) => {
+                if e.kind() != TimedOut {
+                    println!("Error reading packet header {:?}", e);
+                    return Err(BESLinkError::from(e));
+                }
+            }
+        }
+    }
+    return Ok((response, packet));
+}
 pub fn read_packet(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage, BESLinkError> {
     //
     let mut packet: Vec<u8> = vec![];
@@ -110,9 +140,8 @@ fn decode_packet_length(packet: &Vec<u8>) -> u16 {
             MessageTypes::FlashBurnData => 8,
             MessageTypes::ProgrammerStart => 6,
             MessageTypes::SysConfig => {
-
                 return 6;
-            },
+            }
         },
         Err(_) => {
             println!(

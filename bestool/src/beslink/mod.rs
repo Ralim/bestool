@@ -4,6 +4,7 @@ mod errors;
 mod memory_info;
 mod message;
 mod packet;
+mod read_flash;
 mod sync;
 mod test_port;
 mod write_flash;
