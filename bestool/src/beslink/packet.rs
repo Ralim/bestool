@@ -5,15 +5,14 @@ use serialport::SerialPort;
 use std::io::ErrorKind::TimedOut;
 use std::io::{Read, Write};
 use std::time::Duration;
-use tracing::error;
-use tracing::info;
 use tracing::warn;
+use tracing::{debug, error};
 
 pub fn send_packet(serial_port: &mut Box<dyn SerialPort>, msg: BesMessage) -> std::io::Result<()> {
     let packet = msg.to_vec();
     return match serial_port.write_all(packet.as_slice()) {
         Ok(_) => {
-            info!("Wrote {} bytes", packet.len());
+            debug!("Wrote {} bytes", packet.len());
             let _ = serial_port.flush();
             Ok(())
         }
@@ -23,7 +22,37 @@ pub fn send_packet(serial_port: &mut Box<dyn SerialPort>, msg: BesMessage) -> st
         }
     };
 }
+pub fn read_packet_with_trailing_data(
+    serial_port: &mut Box<dyn SerialPort>,
+    expected_data_len: usize,
+) -> Result<(BesMessage, Vec<u8>), BESLinkError> {
+    //First read the packet; then read the expected_raw_bytes from the uart
+    //TODO for now assuming the 0x03 code for response
 
+    let response = read_packet(serial_port)?;
+    if response.type1 != MessageTypes::FlashRead {
+        return Err(BESLinkError::InvalidArgs);
+    }
+    let mut packet: Vec<u8> = vec![];
+    let mut buffer: [u8; 128] = [0; 128];
+
+    while packet.len() < expected_data_len {
+        match serial_port.read(&mut buffer) {
+            Ok(n) => {
+                if n > 0 {
+                    packet.extend(&buffer[0..n]);
+                }
+            }
+            Err(e) => {
+                if e.kind() != TimedOut {
+                    println!("Error reading packet header {:?}", e);
+                    return Err(BESLinkError::from(e));
+                }
+            }
+        }
+    }
+    return Ok((response, packet));
+}
 pub fn read_packet(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage, BESLinkError> {
     //
     let mut packet: Vec<u8> = vec![];
@@ -50,7 +79,7 @@ pub fn read_packet(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage, 
         if packet.len() == 3 && packet_len == 3 {
             //Check actual packet length
             packet_len = decode_packet_length(&packet) as usize;
-            info!("Got packet len lookup {} for {}", packet_len, packet[1])
+            debug!("Got packet len lookup {} for {}", packet_len, packet[1])
         }
         //TODO timeout
     }
@@ -109,10 +138,9 @@ fn decode_packet_length(packet: &Vec<u8>) -> u16 {
             MessageTypes::EraseBurnStart => 6,
             MessageTypes::FlashBurnData => 8,
             MessageTypes::ProgrammerStart => 6,
-            MessageTypes::SysConfig => {
-
+            MessageTypes::FlashRead => {
                 return 6;
-            },
+            }
         },
         Err(_) => {
             println!(

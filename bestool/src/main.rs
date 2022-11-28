@@ -1,7 +1,9 @@
 mod beslink;
 mod cmds;
 mod serial_monitor;
-use crate::cmds::{cmd_list_serial_ports, cmd_serial_port_monitor, cmd_write_image};
+use crate::cmds::{
+    cmd_list_serial_ports, cmd_read_image, cmd_serial_port_monitor, cmd_write_image,
+};
 use clap::Parser;
 use tracing::Level;
 
@@ -21,6 +23,7 @@ enum BesTool {
     ListSerialPorts(ListSerialPorts),
     SerialMonitor(SerialMonitor),
     WriteImage(WriteImage),
+    ReadImage(ReadImage),
 }
 
 #[derive(clap::Args, Debug)]
@@ -45,6 +48,17 @@ struct WriteImage {
     #[arg(short, long, default_value_t = 2000000)]
     baud_rate: u32,
 }
+#[derive(clap::Args, Debug)]
+#[command(author, version, about, long_about = None)]
+struct ReadImage {
+    firmware_path: Option<std::path::PathBuf>,
+    #[arg(short, long)]
+    serial_port_path: String,
+    #[arg(short, long, default_value_t = 1024*1024*4)] // default to full flash
+    length: u32,
+    #[arg(short, long, default_value_t = 0)] // default to start of flash
+    offset: u32,
+}
 
 fn main() {
     // install global subscriber configured based on RUST_LOG envvar.
@@ -62,6 +76,12 @@ fn main() {
         BesTool::WriteImage(args) => cmd_write_image(
             args.firmware_path.unwrap().to_str().unwrap().to_owned(),
             args.serial_port_path,
+        ),
+        BesTool::ReadImage(args) => cmd_read_image(
+            args.firmware_path.unwrap().to_str().unwrap().to_owned(),
+            args.serial_port_path,
+            args.offset,
+            args.length,
         ),
     }
 }

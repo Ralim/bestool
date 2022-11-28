@@ -1,11 +1,12 @@
-use std::io::Write;
-use std::time::Duration;
-use crate::beslink::{send_packet, sync, BESLinkError, BesMessage, MessageTypes, BES_SYNC};
+use crate::beslink::{
+    send_packet, sync, BESLinkError, BesMessage, MessageTypes, BES_SYNC, FLASH_BUFFER_SIZE,
+};
 use crc::{Crc, CRC_32_ISO_HDLC};
 use serialport::SerialPort;
+use std::io::Write;
+use std::time::Duration;
 use tracing::error;
 use tracing::info;
-const FLASH_WRITE_SIZE: usize = 0x8000;
 const MAX_UNACKED_PACKETS: usize = 2;
 
 pub fn burn_image_to_flash(
@@ -14,8 +15,8 @@ pub fn burn_image_to_flash(
     address: usize,
 ) -> Result<(), BESLinkError> {
     let mut payload = payload_in.clone();
-    //Pad image to FLASH_WRITE_SIZE
-    while payload.len() % FLASH_WRITE_SIZE != 0 {
+    //Pad image to FLASH_BUFFER_SIZE
+    while payload.len() % FLASH_BUFFER_SIZE != 0 {
         payload.push(0xFF);
     }
     let file_length = payload.len();
@@ -32,7 +33,7 @@ pub fn burn_image_to_flash(
     //Now loop, send a flash chunk and handle an ack
     let mut chunk_num = 0;
     let mut outstanding_chunks = 0;
-    let file_chunks = payload.chunks(FLASH_WRITE_SIZE);
+    let file_chunks = payload.chunks(FLASH_BUFFER_SIZE);
     for chunk in file_chunks {
         loop {
             if outstanding_chunks < MAX_UNACKED_PACKETS {
@@ -101,7 +102,7 @@ fn get_flash_chunk_msg(payload: Vec<u8>, chunk: usize) -> BesMessage {
     };
     data_message
         .payload
-        .extend((FLASH_WRITE_SIZE as u16).to_le_bytes());
+        .extend((FLASH_BUFFER_SIZE as u16).to_le_bytes());
     data_message.payload.extend(vec![0x00, 0x00]);
 
     let crc = Crc::<u32>::new(&CRC_32_ISO_HDLC);
@@ -121,7 +122,7 @@ fn send_flash_chunk_msg(
     payload: Vec<u8>,
     chunk: usize,
 ) -> Result<(), BESLinkError> {
-    if payload.len() != FLASH_WRITE_SIZE {
+    if payload.len() != FLASH_BUFFER_SIZE {
         return Err(BESLinkError::InvalidArgs {});
     }
     let data_message = get_flash_chunk_msg(payload.clone(), chunk);
@@ -132,7 +133,7 @@ fn send_flash_chunk_msg(
     return match serial_port.write_all(message_vec.as_slice()) {
         Ok(_) => {
             info!("Wrote flash buffer of len {} ", message_vec.len());
-            let _ =serial_port.flush();
+            let _ = serial_port.flush();
             std::thread::sleep(Duration::from_millis(10));
             Ok(())
         }
