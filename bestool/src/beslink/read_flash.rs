@@ -3,6 +3,7 @@ use crate::beslink::{
     send_packet, BESLinkError, BesMessage, MessageTypes, BES_SYNC, FLASH_BUFFER_SIZE,
 };
 use serialport::SerialPort;
+use tracing::info;
 
 pub fn read_flash_data(
     serial_port: &mut Box<dyn SerialPort>,
@@ -13,6 +14,12 @@ pub fn read_flash_data(
     while result.len() < length {
         let chunk = read_flash_chunk(serial_port, address + result.len())?;
         result.extend_from_slice(&chunk);
+        info!(
+            "Read {} bytes out of {}  ({}%) from flash",
+            result.len(),
+            length,
+            result.len() * 100 / length
+        );
     }
     result.resize(length, 0xFF);
     return Ok(result);
