@@ -5,10 +5,9 @@ use serialport::SerialPort;
 use std::io::ErrorKind::TimedOut;
 use std::io::{Read, Write};
 use std::time::Duration;
-use tracing::{debug, error};
-use tracing::{info, warn};
+use tracing::{debug, error, warn};
 
-pub fn send_packet(serial_port: &mut Box<dyn SerialPort>, msg: BesMessage) -> std::io::Result<()> {
+pub fn send_message(serial_port: &mut Box<dyn SerialPort>, msg: BesMessage) -> std::io::Result<()> {
     let packet = msg.to_vec();
     return match serial_port.write_all(packet.as_slice()) {
         Ok(_) => {
@@ -22,7 +21,7 @@ pub fn send_packet(serial_port: &mut Box<dyn SerialPort>, msg: BesMessage) -> st
         }
     };
 }
-pub fn read_packet_with_trailing_data(
+pub fn read_message_with_trailing_data(
     serial_port: &mut Box<dyn SerialPort>,
     expected_data_len: usize,
 ) -> Result<(BesMessage, Vec<u8>), BESLinkError> {
@@ -106,8 +105,7 @@ pub fn validate_packet_checksum(packet: &Vec<u8>) -> Result<(), BESLinkError> {
         wanted: checksum,
     };
     warn!("Bad Checksum!! {:?}", e);
-    // return Err(e);
-    return Ok(());
+    return Err(e);
 }
 pub fn calculate_packet_checksum(packet: &Vec<u8>) -> u8 {
     let mut sum: u32 = 0;

@@ -1,4 +1,4 @@
-use crate::beslink::{send_packet, sync, BESLinkError, BesMessage, MessageTypes, BES_SYNC};
+use crate::beslink::{send_message, sync, BESLinkError, BesMessage, MessageTypes, BES_SYNC};
 use serialport::SerialPort;
 use std::io::Write;
 use tracing::error;
@@ -17,7 +17,7 @@ pub fn load_programmer_runtime_binary_blob(
         ],
         checksum: 0x76,
     };
-    let _ = send_packet(&mut serial_port, preload_setup_message)?;
+    let _ = send_message(&mut serial_port, preload_setup_message)?;
     let _ = sync(serial_port, MessageTypes::StartProgrammer)?;
     match serial_port.write_all(PROGRAMMER_BINARY) {
         Ok(_) => {}
@@ -38,7 +38,7 @@ pub fn start_programmer_runtime_binary_blob(
         payload: vec![0x01, 0x00],
         checksum: 0xEB,
     };
-    send_packet(&mut serial_port, preload_setup_message)?;
+    send_message(&mut serial_port, preload_setup_message)?;
     info!("Sent start programmer message");
     return sync(serial_port, MessageTypes::ProgrammerInit);
 }

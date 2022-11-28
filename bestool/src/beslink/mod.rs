@@ -21,7 +21,7 @@ pub use memory_info::query_memory_info;
 pub use message::BesMessage;
 pub use message::MessageTypes;
 pub use packet::read_packet;
-pub use packet::send_packet;
+pub use packet::send_message;
 pub use read_flash::read_flash_data;
 pub use sync::sync;
 pub use write_flash::burn_image_to_flash;

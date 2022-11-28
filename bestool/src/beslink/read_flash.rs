@@ -1,6 +1,6 @@
-use crate::beslink::packet::read_packet_with_trailing_data;
+use crate::beslink::packet::read_message_with_trailing_data;
 use crate::beslink::{
-    send_packet, BESLinkError, BesMessage, MessageTypes, BES_SYNC, FLASH_BUFFER_SIZE,
+    send_message, BESLinkError, BesMessage, MessageTypes, BES_SYNC, FLASH_BUFFER_SIZE,
 };
 use serialport::SerialPort;
 use std::time::Duration;
@@ -55,8 +55,8 @@ fn read_flash_chunk(
     cfg_data_1.payload.extend((chunk_size as u32).to_le_bytes());
     cfg_data_1.set_checksum();
 
-    send_packet(serial_port, cfg_data_1)?;
+    send_message(serial_port, cfg_data_1)?;
     //response is 4102 bytes total = 4096 (0x1000)
-    let (_, payload) = read_packet_with_trailing_data(serial_port, chunk_size as usize)?;
+    let (_, payload) = read_message_with_trailing_data(serial_port, chunk_size as usize)?;
     return Ok(payload);
 }

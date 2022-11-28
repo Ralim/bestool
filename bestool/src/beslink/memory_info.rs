@@ -1,4 +1,4 @@
-use crate::beslink::{send_packet, sync, BESLinkError, BesMessage, MessageTypes, BES_SYNC};
+use crate::beslink::{send_message, sync, BESLinkError, BesMessage, MessageTypes, BES_SYNC};
 use serialport::SerialPort;
 
 pub fn query_memory_info(serial_port: &mut Box<dyn SerialPort>) -> Result<(), BESLinkError> {
@@ -14,9 +14,9 @@ pub fn query_memory_info(serial_port: &mut Box<dyn SerialPort>) -> Result<(), BE
         payload: vec![0x03, 0x01, 0x12],
         checksum: 0xC6,
     };
-    let _ = send_packet(serial_port, get_flash_id_cmd)?;
+    let _ = send_message(serial_port, get_flash_id_cmd)?;
     let flash_id = sync(serial_port, MessageTypes::FlashCommand)?;
-    let _ = send_packet(serial_port, get_flash_unique_id_cmd)?;
+    let _ = send_message(serial_port, get_flash_unique_id_cmd)?;
     let flash_unique_id = sync(serial_port, MessageTypes::FlashCommand)?;
     println!("Flash General ID {:?}", flash_id.payload);
     println!("Flash Unique ID {:?}", flash_unique_id.payload);

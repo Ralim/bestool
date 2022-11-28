@@ -1,5 +1,5 @@
 use crate::beslink::{
-    load_programmer_runtime_binary_blob, query_memory_info, send_packet,
+    load_programmer_runtime_binary_blob, query_memory_info, send_message,
     start_programmer_runtime_binary_blob, sync, BESLinkError, BesMessage, MessageTypes, BES_SYNC,
 };
 use serialport::SerialPort;
@@ -30,7 +30,7 @@ fn sync_with_bootloader(serial_port: &mut Box<dyn SerialPort>) -> Result<(), BES
         payload: vec![0x00, 0x01, 0x01],
         checksum: 0xEF,
     };
-    return match send_packet(serial_port, msg) {
+    return match send_message(serial_port, msg) {
         Ok(_) => Ok(()),
         Err(e) => Err(BESLinkError::from(e)),
     };

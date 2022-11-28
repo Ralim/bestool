@@ -1,5 +1,5 @@
 use crate::beslink::{
-    send_packet, sync, BESLinkError, BesMessage, MessageTypes, BES_SYNC, FLASH_BUFFER_SIZE,
+    send_message, sync, BESLinkError, BesMessage, MessageTypes, BES_SYNC, FLASH_BUFFER_SIZE,
 };
 use crc::{Crc, CRC_32_ISO_HDLC};
 use serialport::SerialPort;
@@ -88,7 +88,7 @@ fn send_flash_commit_message(
         .payload
         .extend(vec![0x1C, 0xEC, 0x57, 0xBE]);
     burn_prepare_message.set_checksum();
-    send_packet(serial_port, burn_prepare_message)?;
+    send_message(serial_port, burn_prepare_message)?;
     info!("Sent flash finalise message");
     sync(serial_port, MessageTypes::FlashCommand)?;
     return Ok(());
@@ -169,7 +169,7 @@ fn send_flash_erase(
         "Sent erase start message, {:?}",
         burn_prepare_message.to_vec()
     );
-    send_packet(serial_port, burn_prepare_message)?;
+    send_message(serial_port, burn_prepare_message)?;
     return sync(serial_port, MessageTypes::EraseBurnStart);
 }
 
