@@ -1,11 +1,7 @@
-use crate::beslink;
 use crate::beslink::{
-    burn_image_to_flash, helper_sync_and_load_programmer, load_programmer_runtime_binary_blob,
-    query_memory_info, read_flash_data, send_cfg_data, start_programmer_runtime_binary_blob,
-    BESLinkError, BES_PROGRAMMING_BAUDRATE,
+    helper_sync_and_load_programmer, read_flash_data, BESLinkError, BES_PROGRAMMING_BAUDRATE,
 };
 use serialport::SerialPort;
-use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::time::Duration;

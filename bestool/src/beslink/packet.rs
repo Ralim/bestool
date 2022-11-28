@@ -5,7 +5,6 @@ use serialport::SerialPort;
 use std::io::ErrorKind::TimedOut;
 use std::io::{Read, Write};
 use std::time::Duration;
-use tracing::info;
 use tracing::warn;
 use tracing::{debug, error};
 

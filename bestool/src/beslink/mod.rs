@@ -1,5 +1,4 @@
 mod bootloader;
-mod cfg_data;
 mod errors;
 mod helper_sync_and_load_programmer;
 mod memory_info;
@@ -16,7 +15,6 @@ pub const FLASH_BUFFER_SIZE: usize = 0x8000;
 
 pub use bootloader::load_programmer_runtime_binary_blob;
 pub use bootloader::start_programmer_runtime_binary_blob;
-pub use cfg_data::send_cfg_data;
 pub use errors::BESLinkError;
 pub use helper_sync_and_load_programmer::helper_sync_and_load_programmer;
 pub use memory_info::query_memory_info;
