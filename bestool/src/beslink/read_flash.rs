@@ -3,6 +3,7 @@ use crate::beslink::{
     send_packet, BESLinkError, BesMessage, MessageTypes, BES_SYNC, FLASH_BUFFER_SIZE,
 };
 use serialport::SerialPort;
+use std::time::Duration;
 use tracing::info;
 
 pub fn read_flash_data(
@@ -14,6 +15,7 @@ pub fn read_flash_data(
     while result.len() < length {
         let chunk = read_flash_chunk(serial_port, address + result.len())?;
         result.extend_from_slice(&chunk);
+        std::thread::sleep(Duration::from_millis(10));
         info!(
             "Read {} bytes out of {}  ({}%) from flash",
             result.len(),
@@ -37,15 +39,13 @@ fn read_flash_chunk(
         payload: vec![0x05, 0x08], // No idea what these two mean yet
         checksum: 0xF6,
     };
-
+    let chunk_size = (FLASH_BUFFER_SIZE / 2);
     cfg_data_1.payload.extend((address as u32).to_le_bytes());
-    cfg_data_1
-        .payload
-        .extend((FLASH_BUFFER_SIZE as u32).to_le_bytes());
+    cfg_data_1.payload.extend((chunk_size as u32).to_le_bytes());
     cfg_data_1.set_checksum();
 
     send_packet(serial_port, cfg_data_1)?;
     //response is 4102 bytes total = 4096 (0x1000)
-    let (_, payload) = read_packet_with_trailing_data(serial_port, FLASH_BUFFER_SIZE as usize)?;
+    let (_, payload) = read_packet_with_trailing_data(serial_port, chunk_size as usize)?;
     return Ok(payload);
 }
