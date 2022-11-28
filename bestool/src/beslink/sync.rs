@@ -1,5 +1,5 @@
 use crate::beslink::errors::BESLinkError;
-use crate::beslink::message::read_packet;
+use crate::beslink::message::read_message;
 use crate::beslink::message::MessageTypes;
 use crate::beslink::BesMessage;
 use serialport::SerialPort;
@@ -10,7 +10,7 @@ pub fn sync(
 ) -> Result<BesMessage, BESLinkError> {
     debug!("Finding Sync on the port for type {:?}", sync_type);
     loop {
-        match read_packet(serial_port) {
+        match read_message(serial_port) {
             Ok(packet) => {
                 if packet.type1 == sync_type {
                     return Ok(packet);

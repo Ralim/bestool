@@ -55,7 +55,7 @@ impl BesMessage {
     pub fn set_checksum(&mut self) {
         let mut v = self.to_vec();
         v.pop();
-        self.checksum = calculate_packet_checksum(&v);
+        self.checksum = calculate_message_checksum(&v);
     }
 }
 
@@ -102,7 +102,7 @@ pub fn read_message_with_trailing_data(
     //First read the packet; then read the expected_raw_bytes from the uart
     //TODO for now assuming the 0x03 code for response
 
-    let response = read_packet(serial_port)?;
+    let response = read_message(serial_port)?;
     if response.type1 != MessageTypes::FlashRead {
         error!("Bad packet type: {:?}", response.type1);
         return Err(BESLinkError::InvalidArgs);
@@ -129,7 +129,7 @@ pub fn read_message_with_trailing_data(
     }
     return Ok((response, packet));
 }
-pub fn read_packet(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage, BESLinkError> {
+pub fn read_message(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage, BESLinkError> {
     //
     let mut packet: Vec<u8> = vec![];
     let mut packet_len: usize = 3; //Start expectations at the minimum
@@ -154,7 +154,7 @@ pub fn read_packet(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage, 
         }
         if packet.len() == 3 && packet_len == 3 {
             //Check actual packet length
-            packet_len = decode_packet_length(&packet) as usize;
+            packet_len = decode_message_length(&packet) as usize;
             debug!("Got packet len lookup {} for {}", packet_len, packet[1])
         }
         //TODO timeout
@@ -169,7 +169,7 @@ pub fn read_packet(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage, 
 pub fn validate_packet_checksum(packet: &Vec<u8>) -> Result<(), BESLinkError> {
     let mut inner_packet = packet.clone();
     let _ = inner_packet.pop();
-    let checksum = calculate_packet_checksum(&inner_packet);
+    let checksum = calculate_message_checksum(&inner_packet);
     if checksum == packet[packet.len() - 1] {
         return Ok(());
     }
@@ -181,7 +181,7 @@ pub fn validate_packet_checksum(packet: &Vec<u8>) -> Result<(), BESLinkError> {
     warn!("Bad Checksum!! {:?}", e);
     return Err(e);
 }
-pub fn calculate_packet_checksum(packet: &Vec<u8>) -> u8 {
+pub fn calculate_message_checksum(packet: &Vec<u8>) -> u8 {
     let mut sum: u32 = 0;
     for b in packet {
         sum += *b as u32;
@@ -189,7 +189,7 @@ pub fn calculate_packet_checksum(packet: &Vec<u8>) -> u8 {
     }
     return (0xFF - sum) as u8;
 }
-fn decode_packet_length(packet: &Vec<u8>) -> u16 {
+fn decode_message_length(packet: &Vec<u8>) -> u16 {
     if packet.len() < 3 {
         return 3; // fail safe
     }
@@ -229,7 +229,7 @@ fn decode_packet_length(packet: &Vec<u8>) -> u16 {
 
 #[cfg(test)]
 mod tests {
-    use crate::beslink::message::calculate_packet_checksum;
+    use crate::beslink::message::calculate_message_checksum;
 
     #[test]
     fn test_calculate_packet_checksum() {
@@ -261,7 +261,7 @@ mod tests {
         ];
         for mut v in test_messages {
             let old_checksum = v.pop().unwrap();
-            let new_checksum = calculate_packet_checksum(&v);
+            let new_checksum = calculate_message_checksum(&v);
             assert_eq!(old_checksum, new_checksum);
         }
     }
