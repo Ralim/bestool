@@ -42,7 +42,7 @@ struct SerialMonitor {
 struct WriteImage {
     firmware_path: Option<std::path::PathBuf>,
     #[arg(short, long)]
-    serial_port_path: String,
+    port: String,
     #[arg(short, long, default_value_t = false)]
     monitor_after: bool,
     #[arg(short, long, default_value_t = 2000000)]
@@ -53,7 +53,7 @@ struct WriteImage {
 struct ReadImage {
     firmware_path: Option<std::path::PathBuf>,
     #[arg(short, long)]
-    serial_port_path: String,
+    port: String,
     #[arg(short, long, default_value_t = 1024*1024*4)] // default to full flash
     length: u32,
     #[arg(short, long, default_value_t = 0)] // default to start of flash
@@ -75,11 +75,11 @@ fn main() {
         }
         BesTool::WriteImage(args) => cmd_write_image(
             args.firmware_path.unwrap().to_str().unwrap().to_owned(),
-            args.serial_port_path,
+            args.port,
         ),
         BesTool::ReadImage(args) => cmd_read_image(
             args.firmware_path.unwrap().to_str().unwrap().to_owned(),
-            args.serial_port_path,
+            args.port,
             args.offset,
             args.length,
         ),
