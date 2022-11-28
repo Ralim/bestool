@@ -8,13 +8,13 @@ use tracing::{debug, error, warn};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum MessageTypes {
-    Sync = 0x50,
+    Sync = 0x50, // Seems to be used at boot for locking with ROM
     FlashRead = 0x03,
     StartProgrammer = 0x53,
     ProgrammerRunning = 0x54,
     ProgrammerStart = 0x55,
     ProgrammerInit = 0x60,
-    FlashCommand = 0x65,
+    FlashCommand = 0x65, // Suspect used to push extra commands to flash controller/chip/die
     EraseBurnStart = 0x61,
     FlashBurnData = 0x62,
 }
