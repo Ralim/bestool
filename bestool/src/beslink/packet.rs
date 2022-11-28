@@ -1,12 +1,12 @@
 use crate::beslink::errors::BESLinkError;
 use crate::beslink::message::{BesMessage, MessageTypes};
-use crate::beslink::BES_SYNC;
+use crate::beslink::{BES_SYNC, FLASH_BUFFER_SIZE};
 use serialport::SerialPort;
 use std::io::ErrorKind::TimedOut;
 use std::io::{Read, Write};
 use std::time::Duration;
-use tracing::warn;
 use tracing::{debug, error};
+use tracing::{info, warn};
 
 pub fn send_packet(serial_port: &mut Box<dyn SerialPort>, msg: BesMessage) -> std::io::Result<()> {
     let packet = msg.to_vec();
@@ -31,16 +31,19 @@ pub fn read_packet_with_trailing_data(
 
     let response = read_packet(serial_port)?;
     if response.type1 != MessageTypes::FlashRead {
+        error!("Bad packet type: {:?}", response.type1);
         return Err(BESLinkError::InvalidArgs);
     }
     let mut packet: Vec<u8> = vec![];
-    let mut buffer: [u8; 128] = [0; 128];
+    let mut buffer: [u8; FLASH_BUFFER_SIZE] = [0; FLASH_BUFFER_SIZE];
 
     while packet.len() < expected_data_len {
         match serial_port.read(&mut buffer) {
             Ok(n) => {
                 if n > 0 {
                     packet.extend(&buffer[0..n]);
+                } else {
+                    warn!("Stalled packet");
                 }
             }
             Err(e) => {
