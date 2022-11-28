@@ -5,15 +5,15 @@ use serialport::SerialPort;
 use std::io::ErrorKind::TimedOut;
 use std::io::{Read, Write};
 use std::time::Duration;
-use tracing::error;
 use tracing::info;
 use tracing::warn;
+use tracing::{debug, error};
 
 pub fn send_packet(serial_port: &mut Box<dyn SerialPort>, msg: BesMessage) -> std::io::Result<()> {
     let packet = msg.to_vec();
     return match serial_port.write_all(packet.as_slice()) {
         Ok(_) => {
-            info!("Wrote {} bytes", packet.len());
+            debug!("Wrote {} bytes", packet.len());
             let _ = serial_port.flush();
             Ok(())
         }
@@ -80,7 +80,7 @@ pub fn read_packet(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage, 
         if packet.len() == 3 && packet_len == 3 {
             //Check actual packet length
             packet_len = decode_packet_length(&packet) as usize;
-            info!("Got packet len lookup {} for {}", packet_len, packet[1])
+            debug!("Got packet len lookup {} for {}", packet_len, packet[1])
         }
         //TODO timeout
     }
