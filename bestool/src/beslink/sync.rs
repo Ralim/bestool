@@ -1,6 +1,6 @@
 use crate::beslink::errors::BESLinkError;
+use crate::beslink::message::read_packet;
 use crate::beslink::message::MessageTypes;
-use crate::beslink::packet::read_packet;
 use crate::beslink::BesMessage;
 use serialport::SerialPort;
 use tracing::{debug, warn};

@@ -1,4 +1,4 @@
-use crate::beslink::packet::read_message_with_trailing_data;
+use crate::beslink::message::read_message_with_trailing_data;
 use crate::beslink::{
     send_message, BESLinkError, BesMessage, MessageTypes, BES_SYNC, FLASH_BUFFER_SIZE,
 };
