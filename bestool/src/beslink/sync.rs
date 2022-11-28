@@ -3,12 +3,12 @@ use crate::beslink::message::MessageTypes;
 use crate::beslink::packet::read_packet;
 use crate::beslink::BesMessage;
 use serialport::SerialPort;
-use tracing::warn;
+use tracing::{debug, warn};
 pub fn sync(
     serial_port: &mut Box<dyn SerialPort>,
     sync_type: MessageTypes,
 ) -> Result<BesMessage, BESLinkError> {
-    println!("Finding Sync on the port for type {:?}", sync_type);
+    debug!("Finding Sync on the port for type {:?}", sync_type);
     loop {
         match read_packet(serial_port) {
             Ok(packet) => {
