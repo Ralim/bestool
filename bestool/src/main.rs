@@ -80,8 +80,8 @@ fn main() {
         BesTool::ReadImage(args) => cmd_read_image(
             args.firmware_path.unwrap().to_str().unwrap().to_owned(),
             args.port,
-            args.offset,
-            args.length,
+            args.offset as usize,
+            args.length as usize,
         ),
     }
 }
