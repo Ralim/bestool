@@ -136,7 +136,7 @@ pub fn read_message_with_trailing_data(
 pub fn read_message(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage, BESLinkError> {
     //
     let mut packet: Vec<u8> = vec![];
-    let mut packet_len: usize = 3; //Start expectations at the minimum
+    let mut packet_len: usize = 4; //Start expectations at the minimum
     let mut buffer: [u8; 1] = [0; 1];
 
     while packet.len() < packet_len {
@@ -156,10 +156,8 @@ pub fn read_message(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage,
                 }
             }
         }
-        if packet.len() == 3 && packet_len == 3 {
-            //Check actual packet length
-            packet_len = decode_message_length(&packet) as usize;
-            debug!("Got packet len lookup {} for {}", packet_len, packet[1])
+        if packet.len() == 4 && packet_len == 4 {
+            packet_len = (0x05 + packet[3]) as usize;
         }
         //TODO timeout
     }
@@ -192,45 +190,6 @@ pub fn calculate_message_checksum(packet: &Vec<u8>) -> u8 {
         sum = sum & 0xFF;
     }
     return (0xFF - sum) as u8;
-}
-fn decode_message_length(packet: &Vec<u8>) -> u16 {
-    if packet.len() < 3 {
-        return 3; // fail safe
-    }
-    let packet_id1 = packet[1];
-    let packet_id2 = packet[2];
-
-    return match packet_id1.try_into() {
-        Ok(type1) => match type1 {
-            MessageTypes::Sync => 8,
-            MessageTypes::StartProgrammer => 6,
-            MessageTypes::ProgrammerRunning => 6,
-            MessageTypes::ProgrammerInit => 11,
-            MessageTypes::FlashCommand => {
-                if packet_id2 == 2 {
-                    return 9;
-                } else if packet_id2 == 0x08 {
-                    return 6;
-                }
-                return 22;
-            }
-            MessageTypes::EraseBurnStart => 6,
-            MessageTypes::FlashBurnData => 8,
-            MessageTypes::ProgrammerStart => 6,
-            MessageTypes::FlashRead => {
-                return 6;
-            }
-            MessageTypes::DeviceCommand => 6,
-            MessageTypes::UnknownORInfo => 6,
-        },
-        Err(_) => {
-            println!(
-                "Unknown packet len 0x{:02X}/0x{:02X}",
-                packet_id1, packet_id2
-            );
-            return 3;
-        }
-    };
 }
 
 #[cfg(test)]
