@@ -8,15 +8,17 @@ use tracing::{debug, error, warn};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum MessageTypes {
-    Sync = 0x50, // Seems to be used at boot for locking with ROM
-    FlashRead = 0x03,
+    DeviceCommand = 0x00, // General commands to the device
+    FlashRead = 0x03,     // Debugging message that lets you dump from address space
+    Sync = 0x50,          // Seems to be used at boot for locking with ROM
     StartProgrammer = 0x53,
     ProgrammerRunning = 0x54,
     ProgrammerStart = 0x55,
     ProgrammerInit = 0x60,
-    FlashCommand = 0x65, // Suspect used to push extra commands to flash controller/chip/die
     EraseBurnStart = 0x61,
     FlashBurnData = 0x62,
+    FlashCommand = 0x65, // Suspect used to push extra commands to flash controller/chip/die
+    UnknownORInfo = 0x66, // Unknown at this point in time, but references "OR Info"; suspect NOR flash info
 }
 impl TryFrom<u8> for MessageTypes {
     type Error = ();
@@ -31,6 +33,8 @@ impl TryFrom<u8> for MessageTypes {
             x if x == MessageTypes::EraseBurnStart as u8 => Ok(MessageTypes::EraseBurnStart),
             x if x == MessageTypes::FlashBurnData as u8 => Ok(MessageTypes::FlashBurnData),
             x if x == MessageTypes::FlashRead as u8 => Ok(MessageTypes::FlashRead),
+            x if x == MessageTypes::UnknownORInfo as u8 => Ok(MessageTypes::UnknownORInfo),
+            x if x == MessageTypes::DeviceCommand as u8 => Ok(MessageTypes::DeviceCommand),
             _ => Err(()),
         }
     }
@@ -216,6 +220,8 @@ fn decode_message_length(packet: &Vec<u8>) -> u16 {
             MessageTypes::FlashRead => {
                 return 6;
             }
+            MessageTypes::DeviceCommand => 6,
+            MessageTypes::UnknownORInfo => 6,
         },
         Err(_) => {
             println!(
