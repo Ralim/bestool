@@ -93,7 +93,14 @@ fn send_flash_commit_message(
     burn_prepare_message.set_checksum();
     send_message(serial_port, burn_prepare_message)?;
     info!("Sent flash finalise message");
-    sync(serial_port, MessageTypes::FlashCommand)?;
+    let resp = sync(serial_port, MessageTypes::FlashCommand)?;
+    if resp.payload != vec![6, 1, 0] {
+        return Err(BESLinkError::BadResponseCode {
+            failed_packet: resp.to_vec(),
+            got: resp.payload[0],
+            wanted: 0x06,
+        });
+    }
     return Ok(());
 }
 fn get_flash_chunk_msg(payload: Vec<u8>, chunk: usize) -> BesMessage {
