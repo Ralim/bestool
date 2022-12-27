@@ -1,8 +1,9 @@
 use crate::beslink::{
     burn_image_to_flash, helper_sync_and_load_programmer, BESLinkError, BES_PROGRAMMING_BAUDRATE,
 };
-use serialport::SerialPort;
+use serialport::{ClearBuffer, SerialPort};
 use std::fs;
+use std::io::Write;
 use std::time::Duration;
 use tracing::error;
 use tracing::info;
@@ -18,6 +19,7 @@ pub fn cmd_write_image(input_file: String, serial_port: String) {
 
     match serial_port.open() {
         Ok(mut port) => {
+            let _ = port.clear(ClearBuffer::All);
             info!("Starting loader and checking communications");
             match helper_sync_and_load_programmer(&mut port) {
                 Ok(_) => {
@@ -25,6 +27,7 @@ pub fn cmd_write_image(input_file: String, serial_port: String) {
                 }
                 Err(e) => {
                     error!("Failed {:?}", e);
+                    return;
                 }
             }
             info!("Now doing firmware load");
@@ -34,6 +37,7 @@ pub fn cmd_write_image(input_file: String, serial_port: String) {
                 }
                 Err(e) => {
                     error!("Failed {:?}", e);
+                    return;
                 }
             }
         }
