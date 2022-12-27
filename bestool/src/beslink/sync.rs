@@ -16,8 +16,10 @@ pub fn sync(
                     return Ok(packet);
                 } else {
                     warn!(
-                        "Ignored packet type {:?} waiting for {:?}",
-                        packet.type1, sync_type
+                        "Ignored packet type {:?} waiting for {:?} => {:X?}",
+                        packet.type1,
+                        sync_type,
+                        packet.to_vec()
                     );
                 }
             }
