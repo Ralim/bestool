@@ -4,7 +4,7 @@ use std::convert::TryFrom;
 use std::io::ErrorKind::TimedOut;
 use std::io::{Read, Write};
 use std::time::Duration;
-use tracing::{debug, error, warn};
+use tracing::{debug, error, info, warn};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum MessageTypes {
@@ -29,6 +29,7 @@ impl TryFrom<u8> for MessageTypes {
             x if x == MessageTypes::StartProgrammer as u8 => Ok(MessageTypes::StartProgrammer),
             x if x == MessageTypes::ProgrammerRunning as u8 => Ok(MessageTypes::ProgrammerRunning),
             x if x == MessageTypes::ProgrammerInit as u8 => Ok(MessageTypes::ProgrammerInit),
+            x if x == MessageTypes::ProgrammerStart as u8 => Ok(MessageTypes::ProgrammerStart),
             x if x == MessageTypes::FlashCommand as u8 => Ok(MessageTypes::FlashCommand),
             x if x == MessageTypes::EraseBurnStart as u8 => Ok(MessageTypes::EraseBurnStart),
             x if x == MessageTypes::FlashBurnData as u8 => Ok(MessageTypes::FlashBurnData),
@@ -79,7 +80,7 @@ impl From<Vec<u8>> for BesMessage {
             }
         };
 
-        msg.payload = d[1..d.len() - 1].to_vec();
+        msg.payload = d[2..d.len() - 1].to_vec();
 
         return msg;
     }
@@ -90,6 +91,7 @@ pub fn send_message(serial_port: &mut Box<dyn SerialPort>, msg: BesMessage) -> s
     return match serial_port.write_all(packet.as_slice()) {
         Ok(_) => {
             debug!("Wrote {} bytes", packet.len());
+            info!("Sent message type {:?} {:X?}", msg.type1, msg.to_vec());
             let _ = serial_port.flush();
             Ok(())
         }
@@ -162,7 +164,6 @@ pub fn read_message(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage,
         //TODO timeout
     }
     std::thread::sleep(Duration::from_millis(5));
-
     return match validate_packet_checksum(&packet) {
         Ok(_) => Ok(BesMessage::from(packet)),
         Err(e) => Err(e),
@@ -195,7 +196,25 @@ pub fn calculate_message_checksum(packet: &Vec<u8>) -> u8 {
 #[cfg(test)]
 mod tests {
     use crate::beslink::message::calculate_message_checksum;
+    use crate::beslink::{BesMessage, MessageTypes, BES_SYNC};
 
+    #[test]
+    fn test_from() {
+        let expected_vec: Vec<u8> = vec![BES_SYNC, 0x55, 0x3A, 0x00, 0xB2];
+        let msg = BesMessage::from(expected_vec.clone());
+        assert_eq!(expected_vec, msg.to_vec())
+    }
+    #[test]
+    fn test_to_vec() {
+        let test = BesMessage {
+            sync: BES_SYNC,
+            type1: MessageTypes::ProgrammerStart,
+            payload: vec![0x3A, 0x00],
+            checksum: 0xB2,
+        };
+        let expected_vec: Vec<u8> = vec![BES_SYNC, 0x55, 0x3A, 0x00, 0xB2];
+        assert_eq!(expected_vec, test.to_vec())
+    }
     #[test]
     fn test_calculate_packet_checksum() {
         //make fake port it can write to
