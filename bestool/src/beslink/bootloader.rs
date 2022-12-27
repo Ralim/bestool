@@ -4,7 +4,7 @@ use std::io::Write;
 use tracing::error;
 use tracing::info;
 //Embed the bin file for future
-const PROGRAMMER_BINARY: &'static [u8; 78564] = include_bytes!("../../../programmer.bin");
+const PROGRAMMER_BINARY: &'static [u8; 75928] = include_bytes!("../../../programmer.bin");
 
 pub fn load_programmer_runtime_binary_blob(
     mut serial_port: &mut Box<dyn SerialPort>,
@@ -14,20 +14,46 @@ pub fn load_programmer_runtime_binary_blob(
         type1: MessageTypes::StartProgrammer,
         payload: vec![
             0x00, 0x0C, //??
-            0xDC, 0x05, 0x01, 0x20, // Possibly load address in ram?
-            0xDC, 0x32, 0x01, 0x00, // Suspect length
-            0xC0, 0xA7, 0xE8, 0x0C,
+            0x1C, 0x06, 0x01, 0x20, // Possibly load address in ram?
+            0x78, 0x24, 0x01, 0x00, // Suspect length
+            0x8A, 0xD7, 0xB9, 0x9E,
         ],
-        checksum: 0x76,
+        checksum: 0x4A,
     };
-    let _ = send_message(&mut serial_port, preload_setup_message)?;
-    let _ = sync(serial_port, MessageTypes::StartProgrammer)?;
-    match serial_port.write_all(PROGRAMMER_BINARY) {
+    info!("Start Message {:X?}", preload_setup_message.to_vec());
+    send_message(&mut serial_port, preload_setup_message)?;
+    let response = sync(serial_port, MessageTypes::StartProgrammer)?;
+    if response.payload[0] != 0x00 {
+        return Err(BESLinkError::BadResponseCode {
+            failed_packet: response.to_vec(),
+            got: response.payload[0],
+            wanted: 0,
+        });
+    }
+    let programmer_leader = BesMessage {
+        sync: BES_SYNC,
+        type1: MessageTypes::ProgrammerRunning,
+        payload: vec![
+            0xA2, 0x03, 0x00, 0x00, 0x00, 0x48, 0x05, 0x45, 0x21, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00,
+        ],
+        checksum: 0x00,
+    };
+    send_message(&mut serial_port, programmer_leader)?;
+    match serial_port.write_all(&PROGRAMMER_BINARY[0x428..PROGRAMMER_BINARY.len() - 4]) {
         Ok(_) => {}
         Err(e) => {
             error!("Failed to write the programmer binary {:?}", e);
             return Err(BESLinkError::from(e));
         }
+    }
+    let response = sync(serial_port, MessageTypes::ProgrammerRunning)?;
+    if response.payload != vec![0xA2, 0x01, 0x20] {
+        return Err(BESLinkError::BadResponseCode {
+            failed_packet: response.to_vec(),
+            got: response.payload[2],
+            wanted: 0x20,
+        });
     }
 
     return Ok(());
@@ -43,5 +69,13 @@ pub fn start_programmer_runtime_binary_blob(
     };
     send_message(&mut serial_port, preload_setup_message)?;
     info!("Sent start programmer message");
-    return sync(serial_port, MessageTypes::ProgrammerInit);
+    let resp = sync(serial_port, MessageTypes::ProgrammerInit)?;
+    if resp.payload != vec![0x00, 0x06, 0x03, 0x01, 0x00, 0x90, 0x00, 0x00] {
+        return Err(BESLinkError::BadResponseCode {
+            failed_packet: resp.to_vec(),
+            got: resp.payload[0],
+            wanted: 0x0,
+        });
+    }
+    return Ok(resp);
 }

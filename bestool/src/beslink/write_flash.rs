@@ -39,6 +39,9 @@ pub fn burn_image_to_flash(
             if outstanding_chunks < MAX_UNACKED_PACKETS {
                 info!("Sending flash chunk {}", chunk_num);
                 send_flash_chunk_msg(serial_port, chunk.to_vec(), chunk_num)?;
+                if chunk_num == 0x00 {
+                    std::thread::sleep(Duration::from_millis(411));
+                }
                 chunk_num += 1;
                 outstanding_chunks += 1;
                 break; // Step to next chunk
@@ -77,7 +80,7 @@ fn send_flash_commit_message(
     let mut burn_prepare_message = BesMessage {
         sync: BES_SYNC,
         type1: MessageTypes::FlashCommand,
-        payload: vec![0x08, 0x09, 0x22],
+        payload: vec![0x06, 0x09, 0x22],
         checksum: 0xEB,
     };
     burn_prepare_message
@@ -132,9 +135,8 @@ fn send_flash_chunk_msg(
 
     return match serial_port.write_all(message_vec.as_slice()) {
         Ok(_) => {
-            info!("Wrote flash buffer of len {} ", message_vec.len());
-            let _ = serial_port.flush();
-            std::thread::sleep(Duration::from_millis(10));
+            info!("Wrote flash buffer of len 0x{:X} ", message_vec.len());
+            std::thread::sleep(Duration::from_millis(10)); // This is just a small rate limiter
             Ok(())
         }
         Err(e) => {
@@ -152,7 +154,7 @@ fn send_flash_erase(
     let mut burn_prepare_message = BesMessage {
         sync: BES_SYNC,
         type1: MessageTypes::EraseBurnStart,
-        payload: vec![0x07, 0x0C],
+        payload: vec![0x05, 0x0C],
         checksum: 0xEB,
     };
     burn_prepare_message
@@ -166,11 +168,19 @@ fn send_flash_erase(
         .extend(vec![0x00, 0x80, 0x00, 0x00]);
     burn_prepare_message.set_checksum();
     info!(
-        "Sent erase start message, {:?}",
+        "Sent erase start message, {:X?}",
         burn_prepare_message.to_vec()
     );
     send_message(serial_port, burn_prepare_message)?;
-    return sync(serial_port, MessageTypes::EraseBurnStart);
+    let resp = sync(serial_port, MessageTypes::EraseBurnStart)?;
+    if resp.payload != vec![0x05, 0x01, 0x00] {
+        return Err(BESLinkError::BadResponseCode {
+            failed_packet: resp.to_vec(),
+            got: resp.payload[0],
+            wanted: 0x05,
+        });
+    }
+    Ok(resp)
 }
 
 #[cfg(test)]
