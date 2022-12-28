@@ -1,5 +1,6 @@
 use crate::beslink::{
-    burn_image_to_flash, helper_sync_and_load_programmer, BESLinkError, BES_PROGRAMMING_BAUDRATE,
+    burn_image_to_flash, helper_sync_and_load_programmer, send_device_reboot, BESLinkError,
+    BES_PROGRAMMING_BAUDRATE,
 };
 use serialport::{ClearBuffer, SerialPort};
 use std::fs;
@@ -50,5 +51,8 @@ fn do_burn_image_to_flash(
 ) -> Result<(), BESLinkError> {
     // Open file, read file, call burn_image_to_flash
     let file_contents = fs::read(input_file)?;
-    return burn_image_to_flash(serial_port, file_contents, 0x3C000000);
+    burn_image_to_flash(serial_port, file_contents, 0x3C000000)?;
+    //Send reset
+    send_device_reboot(serial_port)?;
+    Ok(())
 }
