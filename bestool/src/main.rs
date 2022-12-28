@@ -3,6 +3,7 @@ mod cmds;
 mod serial_monitor;
 use crate::cmds::{
     cmd_list_serial_ports, cmd_read_image, cmd_serial_port_monitor, cmd_write_image,
+    cmd_write_image_then_monitor,
 };
 use clap::Parser;
 use tracing::Level;
@@ -23,6 +24,7 @@ enum BesTool {
     ListSerialPorts(ListSerialPorts),
     SerialMonitor(SerialMonitor),
     WriteImage(WriteImage),
+    WriteImageThenMonitor(WriteImageThenMonitor),
     ReadImage(ReadImage),
 }
 
@@ -43,10 +45,15 @@ struct WriteImage {
     firmware_path: Option<std::path::PathBuf>,
     #[arg(short, long)]
     port: String,
-    #[arg(short, long, default_value_t = false)]
-    monitor_after: bool,
+}
+#[derive(clap::Args, Debug)]
+#[command(author, version, about, long_about = None)]
+struct WriteImageThenMonitor {
+    firmware_path: Option<std::path::PathBuf>,
+    #[arg(short, long)]
+    port: String,
     #[arg(short, long, default_value_t = 2000000)]
-    baud_rate: u32,
+    monitor_baud_rate: u32,
 }
 #[derive(clap::Args, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -82,6 +89,11 @@ fn main() {
             args.port,
             args.offset as usize,
             args.length as usize,
+        ),
+        BesTool::WriteImageThenMonitor(args) => cmd_write_image_then_monitor(
+            args.firmware_path.unwrap().to_str().unwrap().to_owned(),
+            args.port,
+            args.monitor_baud_rate,
         ),
     }
 }
