@@ -34,10 +34,14 @@ pub fn burn_image_to_flash(
     let mut chunk_num = 0;
     let mut outstanding_chunks = 0;
     let file_chunks = payload.chunks(FLASH_BUFFER_SIZE);
+    let file_chunk_count = file_chunks.len();
     for chunk in file_chunks {
         loop {
             if outstanding_chunks < MAX_UNACKED_PACKETS {
-                info!("Sending flash chunk {}", chunk_num);
+                info!(
+                    "Sending flash chunk {} out of {}",
+                    chunk_num, file_chunk_count
+                );
                 send_flash_chunk_msg(serial_port, chunk.to_vec(), chunk_num)?;
                 if chunk_num == 0x00 {
                     std::thread::sleep(Duration::from_millis(411));
@@ -136,7 +140,6 @@ fn send_flash_chunk_msg(
         return Err(BESLinkError::InvalidArgs {});
     }
     let data_message = get_flash_chunk_msg(payload.clone(), chunk);
-    info!("Flash message {:x?}", data_message.to_vec());
     let mut message_vec = data_message.to_vec();
     message_vec.extend(payload);
 
