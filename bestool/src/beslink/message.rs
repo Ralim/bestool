@@ -163,7 +163,6 @@ pub fn read_message(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage,
         }
         //TODO timeout
     }
-    std::thread::sleep(Duration::from_millis(5));
     return match validate_packet_checksum(&packet) {
         Ok(_) => Ok(BesMessage::from(packet)),
         Err(e) => Err(e),
