@@ -23,7 +23,15 @@ pub fn sync(
                     );
                 }
             }
-            Err(e) => return Err(e),
+            Err(e) => match e {
+                BESLinkError::IOError(_) => return Err(e),
+                BESLinkError::SerialPortError(_) => return Err(e),
+                BESLinkError::BadChecksumError { .. } => {
+                    warn!("Ignoring bad checksum; you might not be in programmer mode.")
+                }
+                BESLinkError::BadResponseCode { .. } => return Err(e),
+                BESLinkError::InvalidArgs => return Err(e),
+            },
         }
     }
     // return Err(BESLinkError::Timeout);
