@@ -30,7 +30,7 @@ cargo build --release
 ### Run the tool
 
 ```
-./target/release/bestool read-image --port /dev/ACM0 flashDump.bin
+./target/release/bestool read-image --port /dev/ttyACM0 flashDump.bin
 ```
 
 Run the tool with `--help` to view available options.
