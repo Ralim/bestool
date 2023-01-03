@@ -23,14 +23,14 @@ To build the tool you will need a rust toolchain setup on your local machine.
 [Rustup](https://rustup.rs/) should make this easy if you dont have one.
 
 ```bash
-cd bestool
+cd bestool/bestool
 cargo build --release
 ```
 
 ### Run the tool
 
 ```
-./bestool read-image --port /dev/ACM0 flashDump.bin
+./target/release/bestool read-image --port /dev/ACM0 flashDump.bin
 ```
 
 Run the tool with `--help` to view available options.
