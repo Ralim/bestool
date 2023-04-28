@@ -9,7 +9,7 @@ mod sync;
 mod test_port;
 mod write_flash;
 
-pub const BES_PROGRAMMING_BAUDRATE: u32 = 921600;
+pub const BES_PROGRAMMING_BAUDRATE: u32 = 921_600;
 pub const BES_SYNC: u8 = 0xBE;
 pub const FLASH_BUFFER_SIZE: usize = 0x8000;
 

@@ -4,7 +4,7 @@ use crate::beslink::{
 };
 use serialport::{ClearBuffer, SerialPort};
 use std::fs;
-use std::io::Write;
+
 use std::time::Duration;
 use tracing::error;
 use tracing::info;
@@ -12,8 +12,7 @@ use tracing::info;
 pub fn cmd_write_image(input_file: String, serial_port: String) {
     //First gain sync to the device
     println!(
-        "Writing binary data to {} @ {}",
-        serial_port, BES_PROGRAMMING_BAUDRATE
+        "Writing binary data to {serial_port} @ {BES_PROGRAMMING_BAUDRATE}"
     );
     let mut serial_port = serialport::new(serial_port, BES_PROGRAMMING_BAUDRATE);
     serial_port = serial_port.timeout(Duration::from_millis(5000));
@@ -38,11 +37,10 @@ pub fn cmd_write_image(input_file: String, serial_port: String) {
                 }
                 Err(e) => {
                     error!("Failed {:?}", e);
-                    return;
                 }
             }
         }
-        Err(e) => println!("Failed to open serial port - {:?}", e),
+        Err(e) => println!("Failed to open serial port - {e:?}"),
     }
 }
 fn do_burn_image_to_flash(
@@ -51,7 +49,7 @@ fn do_burn_image_to_flash(
 ) -> Result<(), BESLinkError> {
     // Open file, read file, call burn_image_to_flash
     let file_contents = fs::read(input_file)?;
-    burn_image_to_flash(serial_port, file_contents, 0x3C000000)?;
+    burn_image_to_flash(serial_port, file_contents, 0x3C00_0000)?;
     //Send reset
     send_device_reboot(serial_port)?;
     Ok(())
