@@ -25,5 +25,5 @@ pub fn send_device_reboot(
         device_reboot_message.to_vec()
     );
     send_message(serial_port, device_reboot_message)?;
-    return sync(serial_port, MessageTypes::DeviceCommand);
+    sync(serial_port, MessageTypes::DeviceCommand)
 }

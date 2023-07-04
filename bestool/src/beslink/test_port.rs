@@ -29,36 +29,36 @@ mod tests {
 
     impl SerialPort for FakeSerialPort {
         fn name(&self) -> Option<String> {
-            return Some("Faux".to_owned());
+            Some("Faux".to_owned())
         }
 
         fn baud_rate(&self) -> serialport::Result<u32> {
-            return Ok(BES_PROGRAMMING_BAUDRATE);
+            Ok(BES_PROGRAMMING_BAUDRATE)
         }
 
         fn data_bits(&self) -> serialport::Result<DataBits> {
-            return Ok(DataBits::Eight);
+            Ok(DataBits::Eight)
         }
 
         fn flow_control(&self) -> serialport::Result<FlowControl> {
-            return Ok(FlowControl::None);
+            Ok(FlowControl::None)
         }
 
         fn parity(&self) -> serialport::Result<Parity> {
-            return Ok(Parity::None);
+            Ok(Parity::None)
         }
 
         fn stop_bits(&self) -> serialport::Result<StopBits> {
-            return Ok(StopBits::One);
+            Ok(StopBits::One)
         }
 
         fn timeout(&self) -> Duration {
-            return Duration::from_millis(1000);
+            Duration::from_millis(1000)
         }
 
         fn set_baud_rate(&mut self, baud_rate: u32) -> serialport::Result<()> {
             self.baud = baud_rate;
-            return Ok(());
+            Ok(())
         }
 
         fn set_data_bits(&mut self, _data_bits: DataBits) -> serialport::Result<()> {

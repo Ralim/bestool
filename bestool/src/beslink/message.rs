@@ -3,7 +3,7 @@ use serialport::SerialPort;
 use std::convert::TryFrom;
 use std::io::ErrorKind::TimedOut;
 use std::io::{Read, Write};
-use std::time::Duration;
+
 use tracing::{debug, error, info, warn};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -55,7 +55,7 @@ impl BesMessage {
         result.push(self.type1 as u8);
         result.append(&mut self.payload.clone());
         result.push(self.checksum);
-        return result;
+        result
     }
     pub fn set_checksum(&mut self) {
         let mut v = self.to_vec();
@@ -82,7 +82,7 @@ impl From<Vec<u8>> for BesMessage {
 
         msg.payload = d[2..d.len() - 1].to_vec();
 
-        return msg;
+        msg
     }
 }
 
@@ -127,13 +127,13 @@ pub fn read_message_with_trailing_data(
             }
             Err(e) => {
                 if e.kind() != TimedOut {
-                    println!("Error reading packet header {:?}", e);
+                    println!("Error reading packet header {e:?}");
                     return Err(BESLinkError::from(e));
                 }
             }
         }
     }
-    return Ok((response, packet));
+    Ok((response, packet))
 }
 pub fn read_message(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage, BESLinkError> {
     //
@@ -146,14 +146,14 @@ pub fn read_message(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage,
             Ok(n) => {
                 if n == 1 {
                     // Only grab if actual data
-                    if !(packet.len() == 0 && buffer[0] != BES_SYNC) {
+                    if !(packet.is_empty() && buffer[0] != BES_SYNC) {
                         packet.push(buffer[0]);
                     }
                 }
             }
             Err(e) => {
                 if e.kind() != TimedOut {
-                    println!("Error reading packet header {:?}", e);
+                    println!("Error reading packet header {e:?}");
                     return Err(BESLinkError::from(e));
                 }
             }
@@ -163,10 +163,10 @@ pub fn read_message(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage,
         }
         //TODO timeout
     }
-    return match validate_packet_checksum(&packet) {
+    match validate_packet_checksum(&packet) {
         Ok(_) => Ok(BesMessage::from(packet)),
         Err(e) => Err(e),
-    };
+    }
 }
 pub fn validate_packet_checksum(packet: &Vec<u8>) -> Result<(), BESLinkError> {
     let mut inner_packet = packet.clone();
@@ -181,15 +181,15 @@ pub fn validate_packet_checksum(packet: &Vec<u8>) -> Result<(), BESLinkError> {
         wanted: checksum,
     };
     warn!("Bad Checksum!! {:?}", e);
-    return Err(e);
+    Err(e)
 }
 pub fn calculate_message_checksum(packet: &Vec<u8>) -> u8 {
     let mut sum: u32 = 0;
     for b in packet {
-        sum += *b as u32;
-        sum = sum & 0xFF;
+        sum += u32::from(*b);
+        sum &= 0xFF;
     }
-    return (0xFF - sum) as u8;
+    (0xFF - sum) as u8
 }
 
 #[cfg(test)]

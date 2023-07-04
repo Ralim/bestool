@@ -4,10 +4,10 @@ use std::io::Write;
 use tracing::error;
 use tracing::info;
 //Embed the bin file for future
-const PROGRAMMER_BINARY: &'static [u8; 75928] = include_bytes!("../../../programmer.bin");
+const PROGRAMMER_BINARY: &[u8; 75928] = include_bytes!("../../../programmer.bin");
 
 pub fn load_programmer_runtime_binary_blob(
-    mut serial_port: &mut Box<dyn SerialPort>,
+    serial_port: &mut Box<dyn SerialPort>,
 ) -> Result<(), BESLinkError> {
     let preload_setup_message = BesMessage {
         sync: BES_SYNC,
@@ -21,7 +21,7 @@ pub fn load_programmer_runtime_binary_blob(
         checksum: 0x4A,
     };
     info!("Start Message {:X?}", preload_setup_message.to_vec());
-    send_message(&mut serial_port, preload_setup_message)?;
+    send_message(serial_port, preload_setup_message)?;
     let response = sync(serial_port, MessageTypes::StartProgrammer)?;
     if response.payload[0] != 0x00 {
         return Err(BESLinkError::BadResponseCode {
@@ -39,7 +39,7 @@ pub fn load_programmer_runtime_binary_blob(
         ],
         checksum: 0x00,
     };
-    send_message(&mut serial_port, programmer_leader)?;
+    send_message(serial_port, programmer_leader)?;
     match serial_port.write_all(&PROGRAMMER_BINARY[0x428..PROGRAMMER_BINARY.len() - 4]) {
         Ok(_) => {}
         Err(e) => {
@@ -56,10 +56,10 @@ pub fn load_programmer_runtime_binary_blob(
         });
     }
 
-    return Ok(());
+    Ok(())
 }
 pub fn start_programmer_runtime_binary_blob(
-    mut serial_port: &mut Box<dyn SerialPort>,
+    serial_port: &mut Box<dyn SerialPort>,
 ) -> Result<BesMessage, BESLinkError> {
     let preload_setup_message = BesMessage {
         sync: BES_SYNC,
@@ -67,7 +67,7 @@ pub fn start_programmer_runtime_binary_blob(
         payload: vec![0x01, 0x00],
         checksum: 0xEB,
     };
-    send_message(&mut serial_port, preload_setup_message)?;
+    send_message(serial_port, preload_setup_message)?;
     info!("Sent start programmer message");
     let resp = sync(serial_port, MessageTypes::ProgrammerInit)?;
     if resp.payload != vec![0x00, 0x06, 0x03, 0x01, 0x00, 0x90, 0x00, 0x00] {
@@ -77,5 +77,5 @@ pub fn start_programmer_runtime_binary_blob(
             wanted: 0x0,
         });
     }
-    return Ok(resp);
+    Ok(resp)
 }

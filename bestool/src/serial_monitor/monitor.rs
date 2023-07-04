@@ -14,9 +14,9 @@ pub fn run_serial_monitor(mut port: Box<dyn SerialPort>) -> Result<(), Box<dyn E
             match port.read(&mut read_buffer) {
                 Ok(bytes_read) => {
                     let mut out = stdout();
-                    out.write(&read_buffer[0..min(bytes_read, BUFFER_SIZE)])?;
+                    let _ = out.write(&read_buffer[0..min(bytes_read, BUFFER_SIZE)])?;
                 }
-                Err(e) => println!("Error reading from port {:?}", e),
+                Err(e) => println!("Error reading from port {e:?}"),
             }
         } else {
             sleep(Duration::from_millis(50));

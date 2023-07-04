@@ -35,7 +35,7 @@ pub fn read_flash_data(
         }
     }
     result.resize(length, 0xFF);
-    return Ok(result);
+    Ok(result)
 }
 
 //
@@ -57,6 +57,6 @@ fn read_flash_chunk(
 
     send_message(serial_port, cfg_data_1)?;
     //response is 4102 bytes total = 4096 (0x1000)
-    let (_, payload) = read_message_with_trailing_data(serial_port, chunk_size as usize)?;
-    return Ok(payload);
+    let (_, payload) = read_message_with_trailing_data(serial_port, chunk_size)?;
+    Ok(payload)
 }

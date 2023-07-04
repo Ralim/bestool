@@ -17,7 +17,7 @@ pub fn helper_sync_and_load_programmer(
     info!("Started programmer blob");
     query_memory_info(serial_port)?;
     info!("Got Memory info Done; so programmer blob is working");
-    return Ok(());
+    Ok(())
 }
 fn get_stay_in_programmer_message() -> BesMessage {
     BesMessage {

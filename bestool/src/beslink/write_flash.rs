@@ -14,7 +14,7 @@ pub fn burn_image_to_flash(
     payload_in: Vec<u8>,
     address: usize,
 ) -> Result<(), BESLinkError> {
-    let mut payload = payload_in.clone();
+    let mut payload = payload_in;
     //Pad image to FLASH_BUFFER_SIZE
     while payload.len() % FLASH_BUFFER_SIZE != 0 {
         payload.push(0xFF);
@@ -75,7 +75,7 @@ pub fn burn_image_to_flash(
         }
     }
     info!("Sending flash finalise");
-    return send_flash_commit_message(serial_port, address);
+    send_flash_commit_message(serial_port, address)
 }
 fn send_flash_commit_message(
     serial_port: &mut Box<dyn SerialPort>,
@@ -105,7 +105,7 @@ fn send_flash_commit_message(
             wanted: 0x06,
         });
     }
-    return Ok(());
+    Ok(())
 }
 fn get_flash_chunk_msg(payload: Vec<u8>, chunk: usize) -> BesMessage {
     let mut data_message = BesMessage {
@@ -125,10 +125,10 @@ fn get_flash_chunk_msg(payload: Vec<u8>, chunk: usize) -> BesMessage {
     let crc_value = digest.finalize();
     data_message
         .payload
-        .extend((crc_value as u32).to_le_bytes());
+        .extend(crc_value.to_le_bytes());
     data_message.payload.extend(vec![chunk as u8, 0x00, 0x00]);
     data_message.set_checksum();
-    return data_message;
+    data_message
 }
 
 fn send_flash_chunk_msg(
@@ -198,8 +198,8 @@ mod tests {
     use crate::beslink::write_flash::get_flash_chunk_msg;
 
     //Embed the bin file for future
-    const CHUNK1_TEST: &'static [u8; 32768] = include_bytes!("../../../chunk1.bin");
-    const CHUNK2_TEST: &'static [u8; 32768] = include_bytes!("../../../chunk2.bin");
+    const CHUNK1_TEST: &[u8; 32768] = include_bytes!("../../../chunk1.bin");
+    const CHUNK2_TEST: &[u8; 32768] = include_bytes!("../../../chunk2.bin");
 
     #[test]
     fn test_get_flash_chunk_msg() {

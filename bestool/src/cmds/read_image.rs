@@ -12,8 +12,7 @@ use tracing::info;
 pub fn cmd_read_image(input_file: String, serial_port: String, start: usize, length: usize) {
     //First gain sync to the device
     println!(
-        "Reading binary data from {} @ {}",
-        serial_port, BES_PROGRAMMING_BAUDRATE
+        "Reading binary data from {serial_port} @ {BES_PROGRAMMING_BAUDRATE}"
     );
     let mut serial_port = serialport::new(serial_port, BES_PROGRAMMING_BAUDRATE);
     serial_port = serial_port.timeout(Duration::from_millis(5000));
@@ -27,7 +26,7 @@ pub fn cmd_read_image(input_file: String, serial_port: String, start: usize, len
                 error!("Failed {:?}", e);
             }
         },
-        Err(e) => println!("Failed to open serial port - {:?}", e),
+        Err(e) => println!("Failed to open serial port - {e:?}"),
     }
 }
 fn do_read_flash_data(
@@ -48,7 +47,7 @@ fn do_read_flash_data(
         };
         let chunk = do_reset_sync_read(
             serial_port,
-            0x3C000000 + start + flash_content.len(),
+            0x3C00_0000 + start + flash_content.len(),
             chunk_length,
         )?;
         flash_content.extend(chunk);
@@ -58,7 +57,7 @@ fn do_read_flash_data(
     // Write a slice of bytes to the file
     file.write_all(flash_content.as_slice())?;
 
-    return Ok(());
+    Ok(())
 }
 
 //The main bootloader wasn't super designed to allow reading the flash;
@@ -86,5 +85,5 @@ fn do_reset_sync_read(
     let flash_content = read_flash_data(serial_port, start, length)?;
     //Send reset
     send_device_reboot(serial_port)?;
-    return Ok(flash_content);
+    Ok(flash_content)
 }
