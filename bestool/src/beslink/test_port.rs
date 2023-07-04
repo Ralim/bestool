@@ -7,8 +7,6 @@ mod tests {
 
     pub struct FakeSerialPort {
         baud: u32,
-        pending_read: Vec<u8>,
-        written_data: Vec<u8>,
     }
 
     impl Read for FakeSerialPort {
