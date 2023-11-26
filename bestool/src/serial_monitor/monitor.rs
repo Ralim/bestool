@@ -1,25 +1,30 @@
 use serialport::SerialPort;
 use std::cmp::min;
+use std::error::Error;
 use std::io::{stdout, Read, Write};
-use std::thread::sleep;
-use std::{error::Error, time::Duration};
+use std::time::Duration;
 
 pub fn run_serial_monitor(mut port: Box<dyn SerialPort>) -> Result<(), Box<dyn Error>> {
     // Until exit, read from the port and display; and send back anything the user types to the uart
     // Except we catch an exit combo
+    port.set_timeout(Duration::from_millis(1000))
+        .expect("Setting port read timeout failed");
     const BUFFER_SIZE: usize = 128;
     let mut read_buffer = [0; BUFFER_SIZE];
     loop {
-        if port.bytes_to_read()? > 0 {
-            match port.read(&mut read_buffer) {
-                Ok(bytes_read) => {
-                    let mut out = stdout();
-                    let _ = out.write(&read_buffer[0..min(bytes_read, BUFFER_SIZE)])?;
-                }
-                Err(e) => println!("Error reading from port {e:?}"),
+        match port.read(&mut read_buffer) {
+            Ok(bytes_read) => {
+                let mut out = stdout();
+                let _ = out.write(&read_buffer[0..min(bytes_read, BUFFER_SIZE)])?;
             }
-        } else {
-            sleep(Duration::from_millis(50));
+            Err(e) => {
+                match e.kind() {
+                    std::io::ErrorKind::TimedOut => { /*No-op for timeouts */ }
+                    _ => {
+                        println!("Error reading from port {e:?}")
+                    }
+                }
+            }
         }
     }
 }

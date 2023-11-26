@@ -5,6 +5,7 @@ pub fn cmd_serial_port_monitor(port_name: String, baud_rate: u32) {
     // Eventually we will hook in extra utility commands
     println!("Opening serial monitor to {port_name} @ {baud_rate}");
     let serial_port = serialport::new(port_name, baud_rate);
+
     match serial_port.open() {
         Ok(port) => {
             let _ = run_serial_monitor(port);
