@@ -196,8 +196,8 @@ mod tests {
     use crate::beslink::write_flash::get_flash_chunk_msg;
 
     //Embed the bin file for future
-    const CHUNK1_TEST: &[u8; 32768] = include_bytes!("../../../chunk1.bin");
-    const CHUNK2_TEST: &[u8; 32768] = include_bytes!("../../../chunk2.bin");
+    const CHUNK1_TEST: &[u8; 32768] = include_bytes!("../../res/chunk1.bin");
+    const CHUNK2_TEST: &[u8; 32768] = include_bytes!("../../res/chunk2.bin");
 
     #[test]
     fn test_get_flash_chunk_msg() {
