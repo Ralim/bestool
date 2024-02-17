@@ -36,7 +36,7 @@ jobs:
         with:
           components: clippy,rustfmt
       - run: sudo apt-get update && sudo apt-get install -y libudev-dev
-      - run: cargo install --locked cargo-vet
+      - run: cargo install --locked cargo-vet --version "0.9.0"
         working-directory: bestool
       - run: cargo vet --locked
         working-directory: bestool
