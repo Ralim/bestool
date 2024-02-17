@@ -18,7 +18,7 @@ pub use bootloader::start_programmer_runtime_binary_blob;
 pub use errors::BESLinkError;
 pub use helper_sync_and_load_programmer::helper_sync_and_load_programmer;
 pub use memory_info::query_memory_info;
-pub use message::read_message;
+
 pub use message::send_message;
 pub use message::BesMessage;
 pub use message::MessageTypes;
