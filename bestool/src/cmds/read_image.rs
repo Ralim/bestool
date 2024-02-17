@@ -11,9 +11,7 @@ use tracing::info;
 
 pub fn cmd_read_image(input_file: String, serial_port: String, start: usize, length: usize) {
     //First gain sync to the device
-    println!(
-        "Reading binary data from {serial_port} @ {BES_PROGRAMMING_BAUDRATE}"
-    );
+    println!("Reading binary data from {serial_port} @ {BES_PROGRAMMING_BAUDRATE}");
     let mut serial_port = serialport::new(serial_port, BES_PROGRAMMING_BAUDRATE);
     serial_port = serial_port.timeout(Duration::from_millis(5000));
 
