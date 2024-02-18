@@ -1,0 +1,22 @@
+---
+name: CI tests (Nix)
+
+on:
+  workflow_call:
+
+jobs:
+  run-tests:
+    name: Nix CI tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v25
+      - name: Build Nix package
+        run: nix build
+      - name: Check Flake formatting
+        run: nix run nixpkgs#nixpkgs-fmt -- --check ./
+      - name: Check Flake with Nix
+        run: nix flake check
+      - name: Check Flake with Statix
+        run: nix run nixpkgs#statix -- check ./

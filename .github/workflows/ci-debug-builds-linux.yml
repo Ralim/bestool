@@ -1,0 +1,60 @@
+---
+name: Nightly builder (Linux)
+
+on:
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-nightlies-linux:
+    name: Nightly builds for Linux
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        target: [aarch64-unknown-linux-musl, x86_64-unknown-linux-musl]
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+      - name: Cache Rust assets
+        id: rust-cache
+        uses: Swatinem/rust-cache@v2
+      - name: Configure Rust
+        if: ${{ steps.rust-cache.outputs.cache-hit != 'true' }}
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          default: true
+          override: true
+          target: ${{ matrix.target }}
+          profile: minimal
+      - name: Install Cross
+        if: ${{ steps.rust-cache.outputs.cache-hit != 'true' }}
+        uses: brndnmtthws/rust-action-cargo-binstall@v1.1.0
+        with:
+          packages: cross
+      - name: Build bestool release for Linux.
+        id: build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: >-
+            --all --locked --verbose --target=${{ matrix.target }}
+          use-cross: true
+      - name: Create nightly release
+        continue-on-error: true
+        uses: actions/create-release@v1
+        with:
+          draft: false
+          prerelease: true
+          body: "Nightly build of `bestool` for Linux: ${{ matrix.target }}"
+          release_name: bestool-nightly-${{ matrix.target }}
+          tag_name: bestool-nightly-${{ matrix.target }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload debug nightly build
+        run: gh release upload bestool-nightly-${{ matrix.target }} ${{ github.workspace }}/target/${{ matrix.target }}/debug/bestool --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
