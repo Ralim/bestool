@@ -1,25 +1,25 @@
-use thiserror::Error;
-
-#[derive(Error, Debug)]
+#[derive(Debug)]
 pub enum BESLinkError {
-    #[error("IOError")]
-    IOError(#[from] std::io::Error),
-    #[error("SerialPortError")]
-    SerialPortError(#[from] serialport::Error),
-    #[error("BadChecksumError Bad checksum; got {got:?} wanted {wanted:?} : {failed_packet:X?}")]
+    IOError {
+        e: std::io::Error,
+    },
     BadChecksumError {
         failed_packet: Vec<u8>,
         got: u8,
         wanted: u8,
     },
-    #[error("BadResponseCode Bad result; got {got:?} wanted {wanted:?} : {failed_packet:X?}")]
     BadResponseCode {
         failed_packet: Vec<u8>,
         got: u8,
         wanted: u8,
     },
-    #[error("Invalid Argument")]
     InvalidArgs,
     // #[error("Communications timed out")]
     // Timeout,
+}
+
+impl From<std::io::Error> for BESLinkError {
+    fn from(value: std::io::Error) -> Self {
+        Self::IOError { e: value }
+    }
 }
