@@ -1,0 +1,28 @@
+---
+name: CI Tests
+
+on:
+  push:
+    paths: ["src/", "Cargo.toml", "Cargo.lock"]
+  workflow_dispatch:
+
+jobs:
+  test-macos:
+    uses: ./.github/workflows/ci-tests-macos.yml
+    secrets: inherit
+  
+  test-nix:
+    uses: ./.github/workflows/ci-tests-nix.yml
+    secrets: inherit
+
+  test-linux:
+    uses: ./.github/workflows/ci-tests-linux.yml
+    secrets: inherit
+
+  test-windows:
+    uses: ./.github/workflows/ci-tests-windows.yml
+    secrets: inherit
+
+  test-common:
+    uses: ./.github/workflows/ci-tests-common.yml
+    secrets: inherit

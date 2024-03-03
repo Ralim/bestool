@@ -1,0 +1,59 @@
+---
+name: CI tests (Linux)
+
+on:
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  run-linux-tests:
+    name: CI tests for ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        target: [aarch64-unknown-linux-musl, x86_64-unknown-linux-musl]
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+      - name: Cache Rust assets
+        id: rust-cache
+        uses: Swatinem/rust-cache@v2
+      - name: Configure Rust
+        if: ${{ steps.rust-cache.outputs.cache-hit != 'true' }}
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          components: clippy,rustfmt
+          override: true
+          target: ${{ matrix.target }}
+          default: true
+      - name: Install Cross
+        if: ${{ steps.rust-cache.outputs.cache-hit != 'true' }}
+        uses: brndnmtthws/rust-action-cargo-binstall@v1.1.0
+        with:
+          packages: cross
+
+      - name: Run Linux tests of `bestool`
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --target=${{ matrix.target }}
+          use-cross: true
+
+      - name: Run Linux checks of `bestool`
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --target=${{ matrix.target }}
+          use-cross: true
+
+      - name: Run Linux Clippy tests of `bestool`
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --target=${{ matrix.target }}
+          use-cross: true
