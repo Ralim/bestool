@@ -123,9 +123,7 @@ fn get_flash_chunk_msg(payload: Vec<u8>, chunk: usize) -> BesMessage {
     let mut digest = crc.digest();
     digest.update(&payload);
     let crc_value = digest.finalize();
-    data_message
-        .payload
-        .extend(crc_value.to_le_bytes());
+    data_message.payload.extend(crc_value.to_le_bytes());
     data_message.payload.extend(vec![chunk as u8, 0x00, 0x00]);
     data_message.set_checksum();
     data_message

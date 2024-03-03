@@ -2,12 +2,12 @@
 # cargo-vet audits file
 
 [[audits.bitflags]]
-who = "Ben Brown <ralim@ralimtek.com>"
+who = "Ben V. Brown <Ralim@Ralimtek.com>"
 criteria = "safe-to-deploy"
 delta = "2.4.1 -> 2.4.2"
 
 [[audits.io-kit-sys]]
-who = "Ben Brown <ralim@ralimtek.com>"
+who = "Ben V. Brown <Ralim@Ralimtek.com>"
 criteria = "safe-to-deploy"
 version = "0.4.0"
 
@@ -17,17 +17,22 @@ criteria = "safe-to-deploy"
 delta = "0.3.26 -> 0.3.27"
 
 [[audits.pkg-config]]
-who = "Ben Brown <ralim@ralimtek.com>"
+who = "Ben V. Brown <Ralim@Ralimtek.com>"
 criteria = "safe-to-deploy"
-delta = "0.3.27 -> 0.3.29"
+delta = "0.3.29 -> 0.3.30"
 
 [[audits.serialport]]
-who = "Ben Brown <ralim@ralimtek.com>"
+who = "Ben V. Brown <Ralim@Ralimtek.com>"
 criteria = "safe-to-deploy"
 delta = "4.2.2 -> 4.3.0"
 
+[[audits.strsim]]
+who = "Ben V. Brown <Ralim@Ralimtek.com>"
+criteria = "safe-to-deploy"
+delta = "0.10.0 -> 0.11.0"
+
 [[audits.unescaper]]
-who = "Ben Brown <ralim@ralimtek.com>"
+who = "Ben V. Brown <Ralim@Ralimtek.com>"
 criteria = "safe-to-deploy"
 version = "0.1.4"
 
@@ -103,17 +108,11 @@ user-id = 2915 # Amanieu d'Antras (Amanieu)
 start = "2021-01-27"
 end = "2024-11-26"
 
-[[trusted.libc]]
-criteria = "safe-to-deploy"
-user-id = 51017 # Yuki Okushi (JohnTitor)
-start = "2020-03-17"
-end = "2025-01-27"
-
 [[trusted.mach2]]
 criteria = "safe-to-deploy"
 user-id = 51017 # Yuki Okushi (JohnTitor)
 start = "2021-11-15"
-end = "2025-01-27"
+end = "2025-02-17"
 
 [[trusted.memchr]]
 criteria = "safe-to-deploy"

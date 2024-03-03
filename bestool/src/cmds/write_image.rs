@@ -11,9 +11,7 @@ use tracing::info;
 
 pub fn cmd_write_image(input_file: String, serial_port: String) {
     //First gain sync to the device
-    println!(
-        "Writing binary data to {serial_port} @ {BES_PROGRAMMING_BAUDRATE}"
-    );
+    println!("Writing binary data to {serial_port} @ {BES_PROGRAMMING_BAUDRATE}");
     let mut serial_port = serialport::new(serial_port, BES_PROGRAMMING_BAUDRATE);
     serial_port = serial_port.timeout(Duration::from_millis(5000));
 
