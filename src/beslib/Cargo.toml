@@ -12,3 +12,4 @@ version = { workspace = true }
 [dependencies]
 crc = { workspace = true }
 serialport = { workspace = true }
+tracing = { workspace = true }
