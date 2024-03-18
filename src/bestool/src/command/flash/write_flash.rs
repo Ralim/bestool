@@ -1,5 +1,5 @@
 use std::io::Result;
 
-pub(super) fn run() -> Result<()> {
+pub fn run() -> Result<()> {
     unimplemented!()
 }

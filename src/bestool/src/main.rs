@@ -1,13 +1,13 @@
-#![warn(clippy::pedantic, clippy::nursery)]
+#![warn(clippy::all)]
 
 use clap::Parser;
-pub(crate) mod command;
+mod command;
 use command::BestoolCmd;
 use std::io::Result;
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-static HELP_TEMPLATE: &'static str = "\
+static HELP_TEMPLATE: &str = "\
 {before-help}{name} {version}
 {author}
 {about}
@@ -35,5 +35,5 @@ impl Bestool {
 }
 
 fn main() -> Result<()> {
-    Ok(Bestool::parse().run()?)
+    Bestool::parse().run()
 }

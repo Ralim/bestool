@@ -18,19 +18,19 @@ pub fn run() -> Result<()> {
         Ok(ports) => {
             if ports.is_empty() {
                 eprintln!("No serial ports found");
-                return Ok(());
             }
             println!("Detected serial ports and their type:");
             for port in ports {
                 if let Some(port_type) = get_port_type(port.port_type) {
                     println!("{}\t[{}]", port.port_name, port_type);
-                } else {
-                    continue;
                 }
             }
+            Ok(())
         }
-        Err(e) => eprintln!("Could not list ports due to {e:?}"),
+        Err(e) => {
+            eprintln!("Could not list ports due to {e:?}");
+            // Implement err.
+            Ok(())
+        }
     }
-
-    Ok(())
 }
