@@ -51,9 +51,43 @@ pub struct BesMessage {
     pub checksum: u8,
 }
 
+impl From<BesMessage> for Vec<u8> {
+    fn from(mut val: BesMessage) -> Self {
+        debug!("Converting BesMessage to Vec<u8>");
+        let mut packet: Vec<u8> = vec![];
+        packet.push(val.sync);
+        packet.push(val.msg_type.into());
+        packet.append(&mut val.payload);
+        packet.push(val.checksum);
+
+        packet
+    }
+}
+
 impl From<&mut BesMessage> for Vec<u8> {
-    fn from(value: &mut BesMessage) -> Self {
-        value.into()
+    fn from(val: &mut BesMessage) -> Self {
+        debug!("Converting &mut BesMessage to Vec<u8>");
+        let mut packet: Vec<u8> = vec![];
+        packet.push(val.sync);
+        packet.push(val.msg_type.into());
+        packet.append(&mut val.payload);
+        packet.push(val.checksum);
+
+        packet
+    }
+}
+
+impl From<&BesMessage> for Vec<u8> {
+    fn from(val: &BesMessage) -> Self {
+        debug!("Converting &BesMessage to Vec<u8>");
+        let mut val = val.clone();
+        let mut packet: Vec<u8> = vec![];
+        packet.push(val.sync);
+        packet.push(val.msg_type.into());
+        packet.append(&mut val.payload);
+        packet.push(val.checksum);
+
+        packet
     }
 }
 
@@ -75,17 +109,6 @@ impl From<Vec<u8>> for BesMessage {
         msg.payload = v[2..v.len() - 1].to_vec();
 
         msg
-    }
-}
-impl Into<Vec<u8>> for BesMessage {
-    fn into(mut self) -> Vec<u8> {
-        let mut packet: Vec<u8> = vec![];
-        packet.push(self.sync);
-        packet.push(self.msg_type.into());
-        packet.append(&mut self.payload);
-        packet.push(self.checksum);
-
-        packet
     }
 }
 
