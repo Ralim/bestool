@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info};
 
 #[derive(Default, Debug, Eq, PartialEq, Clone, Copy)]
 #[repr(u8)]
@@ -53,7 +53,6 @@ pub struct BesMessage {
 
 impl From<BesMessage> for Vec<u8> {
     fn from(mut val: BesMessage) -> Self {
-        debug!("Converting BesMessage to Vec<u8>");
         let mut packet: Vec<u8> = vec![];
         packet.push(val.sync);
         packet.push(val.msg_type.into());
@@ -66,7 +65,6 @@ impl From<BesMessage> for Vec<u8> {
 
 impl From<&mut BesMessage> for Vec<u8> {
     fn from(val: &mut BesMessage) -> Self {
-        debug!("Converting &mut BesMessage to Vec<u8>");
         let mut packet: Vec<u8> = vec![];
         packet.push(val.sync);
         packet.push(val.msg_type.into());
@@ -79,7 +77,6 @@ impl From<&mut BesMessage> for Vec<u8> {
 
 impl From<&BesMessage> for Vec<u8> {
     fn from(val: &BesMessage) -> Self {
-        debug!("Converting &BesMessage to Vec<u8>");
         let mut val = val.clone();
         let mut packet: Vec<u8> = vec![];
         packet.push(val.sync);
