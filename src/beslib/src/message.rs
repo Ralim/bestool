@@ -38,7 +38,7 @@ impl From<u8> for MessageKind {
             0x61 => Self::EraseBurnStart,
             0x62 => Self::FlashBurnData,
             0x65 => Self::FlashCommand,
-            0x66 | _ => Self::UnknownOrInfo,
+            _ => Self::default(),
         }
     }
 }
