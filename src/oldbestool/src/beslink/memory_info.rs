@@ -14,6 +14,7 @@ pub fn query_memory_info(serial_port: &mut Box<dyn SerialPort>) -> Result<(), BE
         payload: vec![0x03, 0x01, 0x12],
         checksum: 0xC6,
     };
+
     send_message(serial_port, get_flash_id_cmd)?;
     let flash_id = sync(serial_port, MessageTypes::FlashCommand)?;
     send_message(serial_port, get_flash_unique_id_cmd)?;

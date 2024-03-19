@@ -1,0 +1,15 @@
+[package]
+authors = { workspace = true }
+description = "Support library for `bestool`; a command-line utility for BES2300 chips."
+edition = { workspace = true }
+homepage = { workspace = true }
+# license = { workspace = true } # TODO: Specify license with REUSE.
+name = "beslib"
+repository = { workspace = true }
+rust-version = { workspace = true }
+version = { workspace = true }
+
+[dependencies]
+crc = { workspace = true }
+serialport = { workspace = true }
+tracing = { workspace = true }
