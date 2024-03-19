@@ -100,12 +100,7 @@ impl From<Vec<u8>> for BesMessage {
             checksum: v[v.len() - 1],
         };
 
-        if let Ok(msg_type) = v[1].try_into() {
-            msg.msg_type = msg_type;
-        } else {
-            eprintln!("Encountered an unknown packet type: 0x{:02x}", v[1]);
-        }
-
+        msg.msg_type = v[1].into();
         msg.payload = v[2..v.len() - 1].to_vec();
 
         msg
