@@ -169,7 +169,7 @@ pub fn read_message(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage,
     }
 }
 pub fn validate_packet_checksum(packet: &[u8]) -> Result<(), BESLinkError> {
-    let checksum = calculate_message_checksum(&packet[1..packet.len()]);
+    let checksum = calculate_message_checksum(&packet[0..packet.len()-1]);
     if checksum == packet[packet.len() - 1] {
         return Ok(());
     }
@@ -193,6 +193,7 @@ pub fn calculate_message_checksum(packet: &[u8]) -> u8 {
 #[cfg(test)]
 mod tests {
     use crate::beslink::message::calculate_message_checksum;
+    use crate::beslink::message::validate_packet_checksum;
     use crate::beslink::{BesMessage, MessageTypes, BES_SYNC};
 
     #[test]
@@ -245,5 +246,36 @@ mod tests {
             let new_checksum = calculate_message_checksum(&v);
             assert_eq!(old_checksum, new_checksum);
         }
+    }
+    #[test]
+    fn test_validate_packet_checksum() {
+        let test_messages: Vec<Vec<u8>> = vec![
+            vec![0xBE, 0x50, 0x00, 0x03, 0x00, 0x00, 0x01, 0xED],
+            vec![0xBE, 0x50, 0x00, 0x01, 0x01, 0xEF],
+            vec![0xBE, 0x53, 0x00, 0x01, 0x00, 0xED],
+            vec![0xBE, 0x65, 0x02, 0x01, 0x11, 0xC8],
+            vec![0xBE, 0x65, 0x03, 0x01, 0x12, 0xC6],
+            vec![
+                0xBE, 0x62, 0xC1, 0x0B, 0x00, 0x80, 0x00, 0x00, 0xAB, 0x77, 0x7F, 0xF4, 0x00, 0x00,
+                0x00, 0xFE,
+            ],
+            vec![
+                0xBE, 0x62, 0xC2, 0x0B, 0x00, 0x80, 0x00, 0x00, 0x34, 0x90, 0x61, 0xF9, 0x01, 0x00,
+                0x00, 0x73,
+            ],
+            vec![
+                0xBE, 0x61, 0x07, 0x0C, 0x00, 0x00, 0x00, 0x3C, 0x00, 0x00, 0x0D, 0x00, 0x00, 0x80,
+                0x00, 0x00, 0x04,
+            ],
+            vec![
+                0xBE, 0x03, 0x06, 0x08, 0x00, 0xF0, 0x0F, 0x3C, 0x00, 0x10, 0x00, 0x00, 0xE5,
+            ],
+            vec![
+                0xBE, 0x03, 0x05, 0x08, 0x00, 0xE0, 0x0F, 0x3C, 0x00, 0x10, 0x00, 0x00, 0xF6,
+            ],
+        ];
+        for v in test_messages {
+	    assert!(validate_packet_checksum(&v).is_ok())
+	}
     }
 }
