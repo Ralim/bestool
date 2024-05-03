@@ -1,5 +1,5 @@
-use std::io::Write;
-
+use std::io::{Result as IoResult, Write};
+use crate::utils::calculate_message_checksum;
 use tracing::{debug, info};
 
 #[derive(Default, Debug, Eq, PartialEq, Clone, Copy)]
@@ -111,21 +111,23 @@ impl BesMessage {
         self.checksum = crate::utils::calculate_message_checksum(&v);
     }
 
-    pub fn send_packet(&self, writer: &mut dyn Write) -> std::io::Result<()> {
+    pub fn send(self, out: &mut dyn Write) -> IoResult<()>
+    {
         let packet: Vec<u8>;
 
-        if let Ok(p) = self.try_into() {
+        #[allow(clippy::unnecessary_fallible_conversions)]
+        if let Ok(p) = self.clone().try_into() {
             packet = p;
         } else {
             panic!("Failed to convert BesMessage to Vec<u8>");
         }// Return Error.
 
-        return match writer.write_all(packet.as_slice()) {
+        return match out.write_all(packet.as_slice()) {
             Ok(_) => {
                 debug!("Sent message to chip: {packet:X?}", packet = packet);
                 debug!("Wrote {len} bytes.", len = packet.len());
 
-                // Serial port should be flushed?
+                // TODO: Should the caller flush the target device? (i.e, serial port).
 
                 info!("Sent message type: {:?}", self.msg_type);
                 Ok(())
