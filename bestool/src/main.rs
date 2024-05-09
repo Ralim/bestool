@@ -89,18 +89,16 @@ fn main() {
         BesTool::SerialMonitor(args) => {
             cmd_serial_port_monitor(&args.serial_port_path, args.baud_rate, args.wait);
         }
-        BesTool::WriteImage(args) => {
-            cmd_write_image(args.firmware_path.to_str().unwrap(), &args.port, args.wait)
-        }
+        BesTool::WriteImage(args) => cmd_write_image(&args.firmware_path, &args.port, args.wait),
         BesTool::ReadImage(args) => cmd_read_image(
-            args.firmware_path.to_str().unwrap(),
+            &args.firmware_path,
             &args.port,
             args.offset as usize,
             args.length as usize,
             args.wait,
         ),
         BesTool::WriteImageThenMonitor(args) => cmd_write_image_then_monitor(
-            args.firmware_path.to_str().unwrap(),
+            &args.firmware_path,
             &args.port,
             args.monitor_baud_rate,
             args.wait,

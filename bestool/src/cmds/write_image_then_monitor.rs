@@ -8,12 +8,13 @@ use serialport::{ClearBuffer, SerialPort};
 
 use std::fs;
 
+use std::path::PathBuf;
 use std::time::Duration;
 use tracing::error;
 use tracing::info;
 
 pub fn cmd_write_image_then_monitor(
-    input_file: &str,
+    input_file_path: &PathBuf,
     serial_port: &str,
     monitor_baud_rate: u32,
     wait_for_port: bool,
@@ -38,7 +39,7 @@ pub fn cmd_write_image_then_monitor(
         }
     }
     info!("Now doing firmware load");
-    match do_burn_image_to_flash(input_file, &mut port) {
+    match do_burn_image_to_flash(input_file_path, &mut port) {
         Ok(_) => {
             info!("Done...");
         }
@@ -65,7 +66,7 @@ pub fn cmd_write_image_then_monitor(
     }
 }
 fn do_burn_image_to_flash(
-    input_file: &str,
+    input_file: &PathBuf,
     serial_port: &mut Box<dyn SerialPort>,
 ) -> Result<(), BESLinkError> {
     // Open file, read file, call burn_image_to_flash

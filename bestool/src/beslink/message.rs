@@ -169,7 +169,7 @@ pub fn read_message(serial_port: &mut Box<dyn SerialPort>) -> Result<BesMessage,
     }
 }
 pub fn validate_packet_checksum(packet: &[u8]) -> Result<(), BESLinkError> {
-    let checksum = calculate_message_checksum(&packet[0..packet.len()-1]);
+    let checksum = calculate_message_checksum(&packet[0..packet.len() - 1]);
     if checksum == packet[packet.len() - 1] {
         return Ok(());
     }
@@ -275,7 +275,7 @@ mod tests {
             ],
         ];
         for v in test_messages {
-	    assert!(validate_packet_checksum(&v).is_ok())
-	}
+            assert!(validate_packet_checksum(&v).is_ok())
+        }
     }
 }

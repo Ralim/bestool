@@ -5,12 +5,12 @@ use crate::beslink::{
 use crate::serial_port_opener::open_serial_port_with_wait;
 use serialport::{ClearBuffer, SerialPort};
 use std::fs;
-
+use std::path::PathBuf;
 use std::time::Duration;
 use tracing::error;
 use tracing::info;
 
-pub fn cmd_write_image(input_file: &str, port_name: &str, wait_for_port: bool) {
+pub fn cmd_write_image(input_file: &PathBuf, port_name: &str, wait_for_port: bool) {
     //First gain sync to the device
     println!("Writing binary data to {port_name} @ {BES_PROGRAMMING_BAUDRATE}");
     let mut port = open_serial_port_with_wait(port_name, BES_PROGRAMMING_BAUDRATE, wait_for_port);
@@ -39,7 +39,7 @@ pub fn cmd_write_image(input_file: &str, port_name: &str, wait_for_port: bool) {
     }
 }
 fn do_burn_image_to_flash(
-    input_file: &str,
+    input_file: &PathBuf,
     serial_port: &mut Box<dyn SerialPort>,
 ) -> Result<(), BESLinkError> {
     // Open file, read file, call burn_image_to_flash

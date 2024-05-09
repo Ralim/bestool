@@ -6,12 +6,13 @@ use crate::serial_port_opener::open_serial_port_with_wait;
 use serialport::SerialPort;
 use std::fs::File;
 use std::io::prelude::*;
+use std::path::PathBuf;
 use std::time::Duration;
 use tracing::error;
 use tracing::info;
 
 pub fn cmd_read_image(
-    input_file: &str,
+    input_file: &PathBuf,
     port_name: &str,
     start: usize,
     length: usize,
@@ -33,7 +34,7 @@ pub fn cmd_read_image(
     }
 }
 fn do_read_flash_data(
-    output_file_path: &str,
+    output_file_path: &PathBuf,
     serial_port: &mut Box<dyn SerialPort>,
     start: usize,
     length: usize,
