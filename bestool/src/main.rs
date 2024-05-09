@@ -1,6 +1,7 @@
 mod beslink;
 mod cmds;
 mod serial_monitor;
+mod serial_port_opener;
 use crate::cmds::{
     cmd_list_serial_ports, cmd_read_image, cmd_serial_port_monitor, cmd_write_image,
     cmd_write_image_then_monitor,
@@ -38,33 +39,41 @@ struct SerialMonitor {
     serial_port_path: String,
     #[arg(short, long, default_value_t = 2000000)]
     baud_rate: u32,
+    #[arg(short, long, default_value_t = false)]
+    wait: bool,
 }
 #[derive(clap::Args, Debug)]
 #[command(author, version, about, long_about = None)]
 struct WriteImage {
-    firmware_path: Option<std::path::PathBuf>,
+    firmware_path: std::path::PathBuf,
     #[arg(short, long)]
     port: String,
+    #[arg(short, long, default_value_t = false)]
+    wait: bool,
 }
 #[derive(clap::Args, Debug)]
 #[command(author, version, about, long_about = None)]
 struct WriteImageThenMonitor {
-    firmware_path: Option<std::path::PathBuf>,
+    firmware_path: std::path::PathBuf,
     #[arg(short, long)]
     port: String,
     #[arg(short, long, default_value_t = 2000000)]
     monitor_baud_rate: u32,
+    #[arg(short, long, default_value_t = false)]
+    wait: bool,
 }
 #[derive(clap::Args, Debug)]
 #[command(author, version, about, long_about = None)]
 struct ReadImage {
-    firmware_path: Option<std::path::PathBuf>,
+    firmware_path: std::path::PathBuf,
     #[arg(short, long)]
     port: String,
     #[arg(short, long, default_value_t = 1024*1024*4)] // default to full flash
     length: u32,
     #[arg(short, long, default_value_t = 0)] // default to start of flash
     offset: u32,
+    #[arg(short, long, default_value_t = false)]
+    wait: bool,
 }
 
 fn main() {
@@ -78,22 +87,23 @@ fn main() {
     match BesTool::parse() {
         BesTool::ListSerialPorts(_) => cmd_list_serial_ports(),
         BesTool::SerialMonitor(args) => {
-            cmd_serial_port_monitor(args.serial_port_path, args.baud_rate);
+            cmd_serial_port_monitor(&args.serial_port_path, args.baud_rate, args.wait);
         }
-        BesTool::WriteImage(args) => cmd_write_image(
-            args.firmware_path.unwrap().to_str().unwrap().to_owned(),
-            args.port,
-        ),
+        BesTool::WriteImage(args) => {
+            cmd_write_image(args.firmware_path.to_str().unwrap(), &args.port, args.wait)
+        }
         BesTool::ReadImage(args) => cmd_read_image(
-            args.firmware_path.unwrap().to_str().unwrap().to_owned(),
-            args.port,
+            args.firmware_path.to_str().unwrap(),
+            &args.port,
             args.offset as usize,
             args.length as usize,
+            args.wait,
         ),
         BesTool::WriteImageThenMonitor(args) => cmd_write_image_then_monitor(
-            args.firmware_path.unwrap().to_str().unwrap().to_owned(),
-            args.port,
+            args.firmware_path.to_str().unwrap(),
+            &args.port,
             args.monitor_baud_rate,
+            args.wait,
         ),
     }
 }
