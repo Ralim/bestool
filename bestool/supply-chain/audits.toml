@@ -6,10 +6,25 @@ who = "Ben V. Brown <Ralim@Ralimtek.com>"
 criteria = "safe-to-deploy"
 delta = "2.4.1 -> 2.4.2"
 
+[[audits.crc]]
+who = "Ben V. Brown <Ralim@Ralimtek.com>"
+criteria = "safe-to-deploy"
+delta = "3.0.1 -> 3.2.1"
+
+[[audits.heck]]
+who = "Ben V. Brown <Ralim@Ralimtek.com>"
+criteria = "safe-to-deploy"
+delta = "0.4.1 -> 0.5.0"
+
 [[audits.io-kit-sys]]
 who = "Ben V. Brown <Ralim@Ralimtek.com>"
 criteria = "safe-to-deploy"
 version = "0.4.0"
+
+[[audits.io-kit-sys]]
+who = "Ben V. Brown <Ralim@Ralimtek.com>"
+criteria = "safe-to-deploy"
+delta = "0.4.0 -> 0.4.1"
 
 [[audits.log]]
 who = "Ben V. Brown <Ralim@Ralimtek.com>"
@@ -35,6 +50,11 @@ delta = "4.2.2 -> 4.3.0"
 who = "Ben V. Brown <Ralim@Ralimtek.com>"
 criteria = "safe-to-deploy"
 delta = "0.10.0 -> 0.11.0"
+
+[[audits.strsim]]
+who = "Ben V. Brown <Ralim@Ralimtek.com>"
+criteria = "safe-to-deploy"
+delta = "0.11.0 -> 0.11.1"
 
 [[audits.unescaper]]
 who = "Ben V. Brown <Ralim@Ralimtek.com>"
@@ -107,11 +127,23 @@ user-id = 6743 # Ed Page (epage)
 start = "2023-04-13"
 end = "2024-11-26"
 
+[[trusted.is_terminal_polyfill]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2024-05-02"
+end = "2025-05-09"
+
 [[trusted.libc]]
 criteria = "safe-to-deploy"
 user-id = 2915 # Amanieu d'Antras (Amanieu)
 start = "2021-01-27"
 end = "2024-11-26"
+
+[[trusted.libc]]
+criteria = "safe-to-deploy"
+user-id = 51017 # Yuki Okushi (JohnTitor)
+start = "2020-03-17"
+end = "2025-05-09"
 
 [[trusted.mach2]]
 criteria = "safe-to-deploy"
@@ -232,6 +264,12 @@ criteria = "safe-to-deploy"
 user-id = 64539 # Kenny Kerr (kennykerr)
 start = "2021-10-28"
 end = "2024-11-26"
+
+[[trusted.windows_i686_gnullvm]]
+criteria = "safe-to-deploy"
+user-id = 64539 # Kenny Kerr (kennykerr)
+start = "2024-04-02"
+end = "2025-05-09"
 
 [[trusted.windows_i686_msvc]]
 criteria = "safe-to-deploy"

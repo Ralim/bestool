@@ -54,10 +54,6 @@ criteria = "safe-to-deploy"
 version = "4.2.2"
 criteria = "safe-to-deploy"
 
-[[exemptions.strsim]]
-version = "0.10.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.tracing]]
 version = "0.1.40"
 criteria = "safe-to-deploy"
