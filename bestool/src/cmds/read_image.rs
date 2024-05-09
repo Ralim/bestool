@@ -2,33 +2,39 @@ use crate::beslink::{
     helper_sync_and_load_programmer, read_flash_data, send_device_reboot, BESLinkError,
     BES_PROGRAMMING_BAUDRATE,
 };
+use crate::serial_port_opener::open_serial_port_with_wait;
 use serialport::SerialPort;
 use std::fs::File;
 use std::io::prelude::*;
+use std::path::PathBuf;
 use std::time::Duration;
 use tracing::error;
 use tracing::info;
 
-pub fn cmd_read_image(input_file: String, serial_port: String, start: usize, length: usize) {
+pub fn cmd_read_image(
+    input_file: &PathBuf,
+    port_name: &str,
+    start: usize,
+    length: usize,
+    wait_for_port: bool,
+) {
     //First gain sync to the device
-    println!("Reading binary data from {serial_port} @ {BES_PROGRAMMING_BAUDRATE}");
-    let mut serial_port = serialport::new(serial_port, BES_PROGRAMMING_BAUDRATE);
-    serial_port = serial_port.timeout(Duration::from_millis(5000));
+    println!("Reading binary data from {port_name} @ {BES_PROGRAMMING_BAUDRATE}");
+    let mut port = open_serial_port_with_wait(port_name, BES_PROGRAMMING_BAUDRATE, wait_for_port);
+    port.set_timeout(Duration::from_millis(5000))
+        .expect("Cant set port timeout");
 
-    match serial_port.open() {
-        Ok(mut port) => match do_read_flash_data(input_file, &mut port, start, length) {
-            Ok(_) => {
-                info!("Done...");
-            }
-            Err(e) => {
-                error!("Failed {:?}", e);
-            }
-        },
-        Err(e) => println!("Failed to open serial port - {e:?}"),
+    match do_read_flash_data(input_file, &mut port, start, length) {
+        Ok(_) => {
+            info!("Done...");
+        }
+        Err(e) => {
+            error!("Failed {:?}", e);
+        }
     }
 }
 fn do_read_flash_data(
-    output_file_path: String,
+    output_file_path: &PathBuf,
     serial_port: &mut Box<dyn SerialPort>,
     start: usize,
     length: usize,
