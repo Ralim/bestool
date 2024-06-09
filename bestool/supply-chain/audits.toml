@@ -26,6 +26,11 @@ who = "Ben V. Brown <Ralim@Ralimtek.com>"
 criteria = "safe-to-deploy"
 delta = "0.4.0 -> 0.4.1"
 
+[[audits.libc]]
+who = "Ben V. Brown <Ralim@Ralimtek.com>"
+criteria = "safe-to-deploy"
+delta = "0.2.154 -> 0.2.155"
+
 [[audits.log]]
 who = "Ben V. Brown <Ralim@Ralimtek.com>"
 criteria = "safe-to-deploy"
@@ -60,6 +65,11 @@ delta = "0.11.0 -> 0.11.1"
 who = "Ben V. Brown <Ralim@Ralimtek.com>"
 criteria = "safe-to-deploy"
 version = "0.1.4"
+
+[[audits.utf8parse]]
+who = "Ben V. Brown <Ralim@Ralimtek.com>"
+criteria = "safe-to-deploy"
+delta = "0.2.1 -> 0.2.2"
 
 [[trusted.aho-corasick]]
 criteria = "safe-to-deploy"
