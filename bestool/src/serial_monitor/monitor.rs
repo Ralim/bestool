@@ -20,8 +20,12 @@ pub fn run_serial_monitor(mut port: Box<dyn SerialPort>) -> Result<(), Box<dyn E
             Err(e) => {
                 match e.kind() {
                     std::io::ErrorKind::TimedOut => { /*No-op for timeouts */ }
+                    std::io::ErrorKind::BrokenPipe => {
+                        println!("USB Port disconnected");
+                        return Ok(());
+                    }
                     _ => {
-                        println!("Error reading from port {e:?}")
+                        println!("Error reading from port {e:?} / {}", e.kind())
                     }
                 }
             }
