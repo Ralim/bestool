@@ -1,0 +1,24 @@
+[workspace]
+resolver = "2"
+members = [
+    "src/beslib",
+    "src/bestool",
+]
+
+[workspace.package]
+authors = ["Ben V. Brown <ralim@ralimtek.com>", "Dom Rodriguez <shymega@shymega.org.uk>"]
+edition = "2021"
+homepage = "https://github.com/Ralim/bestool"
+readme = "/README.md"
+repository = "https://github.com/Ralim/bestool.git"
+rust-version = "1.67.0"
+version = "0.3.0"
+
+[workspace.dependencies]
+clap = { version = "4.5.1", features = ["derive"] }
+crc = "3.0.1"
+serde = { version = "1.0.196", features = ["derive"] }
+serde_json = "1.0.113"
+serialport = "4.3.0"
+tracing = "0.1.40"
+tracing-subscriber = "0.3.18"

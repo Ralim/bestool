@@ -1,0 +1,16 @@
+[package]
+authors = { workspace = true }
+description = "Command-line utility for BES2300 chips."
+edition = { workspace = true }
+homepage = { workspace = true }
+# license = { workspace = true } # TODO: Specify license with REUSE.
+name = "bestool"
+repository = { workspace = true }
+rust-version = { workspace = true }
+version = { workspace = true }
+
+[dependencies]
+beslib = { path = "../beslib" }
+clap = { workspace = true } 
+crc = { workspace = true }
+serialport = { workspace = true }
