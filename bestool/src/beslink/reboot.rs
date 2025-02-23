@@ -21,7 +21,7 @@ pub fn send_device_reboot(
     device_reboot_message.set_checksum();
 
     info!(
-        "Sent device reboot message, {:?}",
+        "Sent device reboot message, {:X?}",
         device_reboot_message.to_vec()
     );
     send_message(serial_port, device_reboot_message)?;
