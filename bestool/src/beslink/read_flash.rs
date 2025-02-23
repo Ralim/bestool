@@ -14,16 +14,12 @@ pub fn read_flash_data(
     let mut result = vec![];
     let mut tries = 0;
     while result.len() < length {
-        match read_flash_chunk(serial_port, address + result.len()) {
+        let pos = address + result.len();
+        match read_flash_chunk(serial_port, pos) {
             Ok(chunk) => {
                 result.extend_from_slice(&chunk);
                 std::thread::sleep(Duration::from_millis(10)); // Try to yield to let watch dog reset
-                info!(
-                    "Read {} bytes out of {}  ({}%) from flash",
-                    result.len(),
-                    length,
-                    result.len() * 100 / length
-                );
+                info!("Read flash from 0x{:X} to 0x{:X}", pos, pos + chunk.len());
             }
             Err(e) => {
                 warn!("Error {}", e);
