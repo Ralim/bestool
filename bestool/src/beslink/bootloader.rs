@@ -4,7 +4,7 @@ use std::io::Write;
 use tracing::error;
 use tracing::info;
 //Embed the bin file for future
-const PROGRAMMER_BINARY: &[u8; 75928] = include_bytes!("../../../programmer.bin");
+const PROGRAMMER_BINARY: &[u8; 75928] = include_bytes!("../../res/programmer.bin");
 
 pub fn load_programmer_runtime_binary_blob(
     serial_port: &mut Box<dyn SerialPort>,

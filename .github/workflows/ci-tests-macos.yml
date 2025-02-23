@@ -1,0 +1,48 @@
+---
+name: CI tests (macOS)
+
+on:
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  run-macos-tests:
+    name: CI tests for ${{ matrix.target }}
+    runs-on: macos-14
+    strategy:
+      fail-fast: true
+      matrix:
+        target: [aarch64-apple-darwin, x86_64-apple-darwin]
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+      - name: Cache Rust assets
+        id: rust-cache
+        uses: Swatinem/rust-cache@v2
+      - name: Configure Rust
+        if: ${{ steps.rust-cache.outputs.cache-hit != 'true' }}
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          components: clippy,rustfmt
+          override: true
+          target: ${{ matrix.target }}
+          default: true
+      - name: Run macOS tests of `bestool`
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --target=${{ matrix.target }}
+      - name: Run macOS checks of `bestool`
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --target=${{ matrix.target }}
+      - name: Run macOS Clippy tests of `bestool`
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --target=${{ matrix.target }}
