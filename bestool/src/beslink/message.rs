@@ -88,7 +88,7 @@ impl From<Vec<u8>> for BesMessage {
 
 pub fn send_message(serial_port: &mut Box<dyn SerialPort>, msg: BesMessage) -> std::io::Result<()> {
     let packet = msg.to_vec();
-    return match serial_port.write_all(packet.as_slice()) {
+    match serial_port.write_all(packet.as_slice()) {
         Ok(_) => {
             debug!("Wrote {} bytes", packet.len());
             info!("Sent message type {:?} {:X?}", msg.type1, msg.to_vec());
@@ -99,7 +99,7 @@ pub fn send_message(serial_port: &mut Box<dyn SerialPort>, msg: BesMessage) -> s
             error!("Writing to port raised {:?}", e);
             Err(e)
         }
-    };
+    }
 }
 pub fn read_message_with_trailing_data(
     serial_port: &mut Box<dyn SerialPort>,
