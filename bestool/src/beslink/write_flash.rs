@@ -141,7 +141,7 @@ fn send_flash_chunk_msg(
     let mut message_vec = data_message.to_vec();
     message_vec.extend(payload);
 
-    return match serial_port.write_all(message_vec.as_slice()) {
+    match serial_port.write_all(message_vec.as_slice()) {
         Ok(_) => {
             info!("Wrote flash buffer of len 0x{:X} ", message_vec.len());
             std::thread::sleep(Duration::from_millis(10)); // This is just a small rate limiter
@@ -151,7 +151,7 @@ fn send_flash_chunk_msg(
             error!("Writing to flash buffer to port raised {:?}", e);
             Err(BESLinkError::from(e))
         }
-    };
+    }
 }
 
 fn send_flash_erase(
