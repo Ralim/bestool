@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: sudo apt-get update && sudo apt-get install -y libudev-dev
-      - run: cargo test 
+      - run: cargo test
         working-directory: bestool
   audit:
     name: cargo audits
@@ -20,7 +20,7 @@ jobs:
         with:
           components: clippy,rustfmt
       - run: sudo apt-get update && sudo apt-get install -y libudev-dev
-      - run: cargo install cargo-audit 
+      - run: cargo install cargo-audit
         working-directory: bestool
       - run: cargo clippy -- -D warnings --no-deps
         working-directory: bestool
@@ -36,7 +36,7 @@ jobs:
         with:
           components: clippy,rustfmt
       - run: sudo apt-get update && sudo apt-get install -y libudev-dev
-      - run: cargo install --locked cargo-vet --version "0.9.0"
+      - run: cargo install --locked cargo-vet --version "0.10.0"
         working-directory: bestool
       - run: cargo vet --locked
         working-directory: bestool
