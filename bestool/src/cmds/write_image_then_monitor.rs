@@ -34,7 +34,7 @@ pub fn cmd_write_image_then_monitor(
             info!("Done...");
         }
         Err(e) => {
-            error!("Failed {:?}", e);
+            error!("Failed {}", e);
             return;
         }
     }
@@ -44,7 +44,7 @@ pub fn cmd_write_image_then_monitor(
             info!("Done...");
         }
         Err(e) => {
-            error!("Failed {:?}", e);
+            error!("Failed {}", e);
             return;
         }
     }
@@ -54,14 +54,14 @@ pub fn cmd_write_image_then_monitor(
             info!("Done...");
         }
         Err(e) => {
-            error!("Failed {:?}", e);
+            error!("Failed {}", e);
             return;
         }
     }
     match run_serial_monitor(port) {
         Ok(_) => {}
         Err(e) => {
-            error!("Failed monitoring: {:?}", e);
+            error!("Failed monitoring: {}", e);
         }
     }
 }

@@ -24,7 +24,7 @@ pub fn cmd_write_image(input_file: &PathBuf, port_name: &str, wait_for_port: boo
             info!("Done...");
         }
         Err(e) => {
-            error!("Failed {:?}", e);
+            error!("Failed {}", e);
             return;
         }
     }
@@ -34,7 +34,7 @@ pub fn cmd_write_image(input_file: &PathBuf, port_name: &str, wait_for_port: boo
             info!("Done...");
         }
         Err(e) => {
-            error!("Failed {:?}", e);
+            error!("Failed {}", e);
         }
     }
 }

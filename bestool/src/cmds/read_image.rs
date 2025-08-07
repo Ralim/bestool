@@ -29,7 +29,7 @@ pub fn cmd_read_image(
             info!("Done...");
         }
         Err(e) => {
-            error!("Failed {:?}", e);
+            error!("Failed {}", e);
         }
     }
 }
@@ -81,7 +81,7 @@ fn do_reset_sync_read(
             info!("Done...Bootloader start");
         }
         Err(e) => {
-            error!("Failed {:?}", e);
+            error!("Failed {}", e);
         }
     }
     info!("Now doing flash read");

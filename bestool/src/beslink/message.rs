@@ -178,7 +178,7 @@ pub fn validate_packet_checksum(packet: &[u8]) -> Result<(), BESLinkError> {
         got: packet[packet.len() - 1],
         wanted: checksum,
     };
-    warn!("Bad Checksum!! {:?}", e);
+    warn!("Bad Checksum!! {}", e);
     Err(e)
 }
 pub fn calculate_message_checksum(packet: &[u8]) -> u8 {

@@ -25,7 +25,7 @@ pub fn burn_image_to_flash(
             info!("Flash Erase confirmed, {:?}", m)
         }
         Err(e) => {
-            error!("Flash erase message failed {:?}", e);
+            error!("Flash erase message failed {}", e);
             return Err(e);
         }
     }
@@ -57,7 +57,7 @@ pub fn burn_image_to_flash(
                     info!("Confirmation for message {}", m.payload[3]);
                 }
                 Err(e) => {
-                    error!("Waiting for flash confirmation, {:?}", e);
+                    error!("Waiting for flash confirmation, {}", e);
                 }
             }
         }
@@ -70,7 +70,7 @@ pub fn burn_image_to_flash(
                 info!("Confirmation for message {}", m.payload[3]);
             }
             Err(e) => {
-                error!("Waiting for flash confirmation, {:?}", e);
+                error!("Waiting for flash confirmation, {}", e);
             }
         }
     }

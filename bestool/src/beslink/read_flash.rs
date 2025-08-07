@@ -26,7 +26,7 @@ pub fn read_flash_data(
                 );
             }
             Err(e) => {
-                warn!("Error {:?}", e);
+                warn!("Error {}", e);
                 tries += 1;
                 if tries > 10 {
                     return Err(e);

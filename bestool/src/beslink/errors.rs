@@ -23,3 +23,34 @@ impl From<std::io::Error> for BESLinkError {
         Self::IOError { e: value }
     }
 }
+
+use std::fmt;
+
+impl fmt::Display for BESLinkError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            BESLinkError::IOError { e } => write!(f, "IO error: {e}"),
+            BESLinkError::BadChecksumError {
+                failed_packet,
+                got,
+                wanted,
+            } => {
+                write!(
+                    f,
+                    "Bad checksum error: failed_packet={failed_packet:?}, got={got}, wanted={wanted}"
+                )
+            }
+            BESLinkError::BadResponseCode {
+                failed_packet,
+                got,
+                wanted,
+            } => {
+                write!(
+                    f,
+                    "Bad response code: failed_packet={failed_packet:?}, got={got}, wanted={wanted}"
+                )
+            }
+            BESLinkError::InvalidArgs => write!(f, "Invalid arguments"),
+        }
+    }
+}
