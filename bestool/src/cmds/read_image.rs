@@ -40,7 +40,7 @@ fn do_read_flash_data(
     length: usize,
 ) -> Result<(), BESLinkError> {
     let mut flash_content: Vec<u8> = vec![];
-    const MAX_READ_BEFORE_RESET: usize = 1024 * 1024; //1MB chunks
+    const MAX_READ_BEFORE_RESET: usize = 1024 * 1024; //1MiB chunks
     while flash_content.len() < length {
         let chunk_length = {
             if (length - flash_content.len()) < MAX_READ_BEFORE_RESET {
@@ -49,11 +49,15 @@ fn do_read_flash_data(
                 MAX_READ_BEFORE_RESET
             }
         };
-        let chunk = do_reset_sync_read(
-            serial_port,
-            0x3C00_0000 + start + flash_content.len(),
-            chunk_length,
-        )?;
+        let pos = 0x3C00_0000 + start + flash_content.len();
+        info!(
+        	"===== Preparing to read flash from 0x{:X} ({}%) to 0x{:X} ({}%) =====",
+            pos,
+            flash_content.len() * 100 / length,
+            pos + chunk_length,
+            (flash_content.len() + chunk_length) * 100 / length,
+        );
+        let chunk = do_reset_sync_read(serial_port, pos, chunk_length)?;
         flash_content.extend(chunk);
     }
 
