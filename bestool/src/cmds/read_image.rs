@@ -51,7 +51,7 @@ fn do_read_flash_data(
         };
         let pos = 0x3C00_0000 + start + flash_content.len();
         info!(
-        	"===== Preparing to read flash from 0x{:X} ({}%) to 0x{:X} ({}%) =====",
+            "===== Preparing to read flash from 0x{:X} ({}%) to 0x{:X} ({}%) =====",
             pos,
             flash_content.len() * 100 / length,
             pos + chunk_length,

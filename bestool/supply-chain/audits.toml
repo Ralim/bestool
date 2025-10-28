@@ -6,6 +6,11 @@ who = "Ben V. Brown <Ralim@Ralimtek.com>"
 criteria = "safe-to-deploy"
 delta = "2.4.1 -> 2.4.2"
 
+[[audits.bitflags]]
+who = "Ben V. Brown <Ralim@Ralimtek.com>"
+criteria = "safe-to-deploy"
+delta = "2.9.4 -> 2.10.0"
+
 [[audits.crc]]
 who = "Ben V. Brown <Ralim@Ralimtek.com>"
 criteria = "safe-to-deploy"
@@ -41,6 +46,11 @@ who = "Ben V. Brown <Ralim@Ralimtek.com>"
 criteria = "safe-to-deploy"
 delta = "0.4.20 -> 0.4.21"
 
+[[audits.nu-ansi-term]]
+who = "Ben V. Brown <Ralim@Ralimtek.com>"
+criteria = "safe-to-deploy"
+delta = "0.50.1 -> 0.50.3"
+
 [[audits.pkg-config]]
 who = "Ben V. Brown <Ralim@Ralimtek.com>"
 criteria = "safe-to-deploy"
@@ -60,6 +70,11 @@ delta = "4.2.2 -> 4.3.0"
 who = "Ben V. Brown <Ralim@Ralimtek.com>"
 criteria = "safe-to-deploy"
 delta = "4.3.0 -> 4.7.2"
+
+[[audits.serialport]]
+who = "Ben V. Brown <Ralim@Ralimtek.com>"
+criteria = "safe-to-deploy"
+delta = "4.7.2 -> 4.8.1"
 
 [[audits.smallvec]]
 who = "Ben V. Brown <Ralim@Ralimtek.com>"
@@ -169,7 +184,7 @@ end = "2026-08-07"
 
 [[trusted.core-foundation]]
 criteria = "safe-to-deploy"
-user-id = 2396 # Josh Matthews (jdm)
+user-id = 2396
 start = "2019-11-12"
 end = "2026-08-07"
 
@@ -177,7 +192,7 @@ end = "2026-08-07"
 criteria = "safe-to-deploy"
 user-id = 6743 # Ed Page (epage)
 start = "2024-05-02"
-end = "2025-05-09"
+end = "2026-10-28"
 
 [[trusted.libc]]
 criteria = "safe-to-deploy"
@@ -225,7 +240,7 @@ end = "2026-08-07"
 criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-04-23"
-end = "2024-11-26"
+end = "2026-10-28"
 
 [[trusted.quote]]
 criteria = "safe-to-deploy"
@@ -291,7 +306,7 @@ end = "2024-11-26"
 criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)
 start = "2021-10-02"
-end = "2024-11-26"
+end = "2026-10-28"
 
 [[trusted.valuable]]
 criteria = "safe-to-deploy"

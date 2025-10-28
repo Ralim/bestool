@@ -16,7 +16,7 @@ pub fn burn_image_to_flash(
 ) -> Result<(), BESLinkError> {
     let mut payload = payload_in;
     //Pad image to FLASH_BUFFER_SIZE
-    while payload.len() % FLASH_BUFFER_SIZE != 0 {
+    while !payload.len().is_multiple_of(FLASH_BUFFER_SIZE) {
         payload.push(0xFF);
     }
     let file_length = payload.len();
