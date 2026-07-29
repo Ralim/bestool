@@ -14,7 +14,7 @@ At the moment bestool is not being released to crates.io but will be in the futu
 ### Clone the repository locally
 
 ```bash
-git clone --recursive https://github.com/Ralim/BES-programming-tool.git
+git clone --recursive https://github.com/Ralim/bestool.git
 ```
 
 ### Build the tool
